@@ -37,6 +37,7 @@ go.work.sum
 *.iml
 
 # Local development files
+docs/
 develop/
 deploy/
 deploy/docker-compose.yml
