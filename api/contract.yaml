@@ -1,296 +1,414 @@
----
 swagger: "2.0"
 info:
-  description: "This is a server ShareTrip Contract Service. "
+  description: "ShareTrip Contract Service API. Manages company contracts and service availability."
   version: "1.0.1"
-  title: "Swagger ShareTrip_Contract"
-  termsOfService: "http://contracts.service.io/terms/"
+  title: "ShareTrip Contract Service"
   contact:
     email: "contracts_service@mail.io"
-  license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 host: "contracts.service.io"
-basePath: "/api/v2/"
+basePath: "/api/v2"
 tags:
-- name: "terms"
-  description: "Everything about your terms"
-  externalDocs:
-    description: "Find out more"
-    url: "http://contracts.service.io"
-- name: contract
-  description: "Operations about contracts"
-  externalDocs:
-    description: "Find out more about our contrscts"
-    url: "http://contracts_service.io/contracts"
+  - name: contracts
+    description: Contract operations
+  - name: services
+    description: Services available under a contract
+  - name: companies
+    description: Company-scoped contract checks
 schemes:
-- "https"
-- "http"
+  - https
+  - http
 paths:
-  /contract/{contractId}:
+  /contracts:
+    post:
+      tags:
+        - contracts
+      summary: Create contract for company
+      description: Creates a new contract for a company.
+      operationId: createContract
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Contract create payload
+          required: true
+          schema:
+            $ref: "#/definitions/ContractRequest"
+      responses:
+        201:
+          description: Contract created
+          schema:
+            $ref: "#/definitions/ContractResponse"
+        400:
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Company not found
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable
+          schema:
+            $ref: "#/definitions/Error"
+
+  /contracts/{contractId}:
     get:
       tags:
-      - "contract"
-      summary: "Get Contract by ID"
-      description: "Returns Contract based on ID"
-      operationId: "getContractByID"
+        - contracts
+      summary: Get contract by ID
+      description: Returns contract by internal contract ID.
+      operationId: getContractByID
       produces:
-      - "application/json"
-      - "application/xml"
+        - application/json
       parameters:
-      - name: "contractId"
-        in: "path"
-        description: "The name that needs to be fetched. Use coontractId for testing. "
-        required: true
-        type: "string"
+        - name: contractId
+          in: path
+          description: Contract ID
+          required: true
+          type: integer
+          format: int64
       responses:
         200:
-          description: "successful operation"
+          description: OK
           schema:
-            $ref: "#/definitions/Contract"
+            $ref: "#/definitions/ContractResponse"
         400:
-          description: "Invalid username supplied"
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/Error"
         404:
-          description: "User not found"
+          description: Contract not found
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable
+          schema:
+            $ref: "#/definitions/Error"
+    patch:
+      tags:
+        - contracts
+      summary: Change contract status
+      description: Updates only the status of an existing contract.
+      operationId: updateContractStatusById
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: contractId
+          in: path
+          description: Contract ID
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: body
+          description: New contract status
+          required: true
+          schema:
+            $ref: "#/definitions/ContractStatusRequest"
+      responses:
+        200:
+          description: Status updated
+          schema:
+            $ref: "#/definitions/ContractUpdateStatusResponse"
+        400:
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Contract not found
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable
+          schema:
+            $ref: "#/definitions/Error"
+
+  /contracts/active:
+    get:
+      tags:
+        - contracts
+      summary: Get active contract by company ID
+      description: Returns the active contract for a company.
+      operationId: getActiveContractByCompanyId
+      produces:
+        - application/json
+      parameters:
+        - name: companyId
+          in: query
+          description: Company ID
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ContractResponse"
+        400:
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Active contract not found
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable
+          schema:
+            $ref: "#/definitions/Error"
+
+  /services:
     put:
       tags:
-      - "contract"
-      summary: "Updated user"
-      description: "This can only be done by the logged in user."
-      operationId: "updateUser"
+        - services
+      summary: Add or update list of services for a contract
+      description: >
+        Replaces/updates the list of available services for a contract.
+        Request must contain contract context and an array of services with enable flags.
+      operationId: upsertContractServices
       consumes:
-      - "application/json"
+        - application/json
       produces:
-      - "application/json"
-      - "application/xml"
+        - application/json
       parameters:
-      - name: "username"
-        in: "path"
-        description: "name that need to be updated"
-        required: true
-        type: "string"
-      - in: "body"
-        name: "body"
-        description: "Updated user object"
-        required: true
-        schema:
-          $ref: "#/definitions/Contract"
-      responses:
-        400:
-          description: "Invalid user supplied"
-        404:
-          description: "User not found"
-    delete:
-      tags:
-      - "contract"
-      summary: "Delete user"
-      description: "This can only be done by the logged in user."
-      operationId: "deleteUser"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "The name that needs to be deleted"
-        required: true
-        type: "string"
-      responses:
-        400:
-          description: "Invalid username supplied"
-        404:
-          description: "User not found"
-  /contract/login:
-    get:
-      tags:
-      - "contract"
-      summary: "Logs user into the system"
-      description: ""
-      operationId: "loginUser"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - name: "username"
-        in: "query"
-        description: "The user name for login"
-        required: true
-        type: "string"
-      - name: "password"
-        in: "query"
-        description: "The password for login in clear text"
-        required: true
-        type: "string"
+        - in: body
+          name: body
+          description: Contract ID and list of services to enable/disable
+          required: true
+          schema:
+            $ref: "#/definitions/ServicesListRequest"
       responses:
         200:
-          description: "successful operation"
-          headers:
-            X-Expires-After:
-              type: "string"
-              format: "date-time"
-              description: "date in UTC when token expires"
-            X-Rate-Limit:
-              type: "integer"
-              format: "int32"
-              description: "calls per hour allowed by the user"
+          description: Services list updated
           schema:
-            type: "string"
+            $ref: "#/definitions/ServicesListResponse"
         400:
-          description: "Invalid username/password supplied"
-  /contract/logout:
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Contract or service not found
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable
+          schema:
+            $ref: "#/definitions/Error"
+
+  /companies/{companyId}/services/{serviceCode}/availability:
     get:
       tags:
-      - "contract"
-      summary: "Logs out current logged in user session"
-      description: ""
-      operationId: "logoutUser"
+        - companies
+      summary: Check service availability for company
+      description: >
+        Business check for ShareTrip: can company use the given service now
+        (active contract, not expired, service enabled).
+      operationId: checkServiceAvailabilityForCompany
       produces:
-      - "application/json"
-      - "application/xml"
-      parameters: []
-      responses:
-        default:
-          description: "successful operation"
-  /contract/createWithArray:
-    post:
-      tags:
-      - "contract"
-      summary: "Creates list of users with given input array"
-      description: ""
-      operationId: "createUsersWithArrayInput"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      - "application/xml"
+        - application/json
       parameters:
-      - in: "body"
-        name: "body"
-        description: "List of user object"
-        required: true
-        schema:
-          type: "array"
-          items:
-            $ref: "#/definitions/Contract"
+        - name: companyId
+          in: path
+          description: Company ID
+          required: true
+          type: integer
+          format: int64
+        - name: serviceCode
+          in: path
+          description: Stable business service code, e.g. trip_creation
+          required: true
+          type: string
       responses:
-        default:
-          description: "successful operation"
-  /contract:
-    post:
-      tags:
-      - "contract"
-      summary: "Create New Contract"
-      description: "Returns Contract based on Request model"
-      operationId: "createContract"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "Created contract object"
-        required: true
-        schema:
-          $ref: '#/definitions/Contract'
-      responses:
-        default:
-          description: "successful operation"
-securityDefinitions:
-  api_key:
-    type: "apiKey"
-    name: "api_key"
-    in: "header"
-  petstore_auth:
-    type: "oauth2"
-    authorizationUrl: "https://petstore.swagger.io/oauth/authorize"
-    flow: "implicit"
-    scopes:
-      read:pets: "read your pets"
-      write:pets: "modify pets in your account"
+        200:
+          description: Availability check result
+          schema:
+            $ref: "#/definitions/AvailabilityResult"
+        400:
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Company, contract or service not found
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable
+          schema:
+            $ref: "#/definitions/Error"
+
 definitions:
-  ApiResponse:
-    type: "object"
+  Error:
+    type: object
+    description: Common error body for all failed responses
     properties:
       code:
-        type: "integer"
-        format: "int32"
-      type:
-        type: "string"
+        type: integer
+        format: int32
+        description: Machine-readable error code
       message:
-        type: "string"
-  Category:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      name:
-        type: "string"
-    xml:
-      name: "Category"
+        type: string
+        description: Human-readable error message
 
-  Tag:
-    type: "object"
+  ContractStatus:
+    type: string
+    description: Contract status
+    enum:
+      - draft
+      - active
+      - suspended
+      - terminated
+
+  ContractRequest:
+    type: object
+    required:
+      - company_id
+      - start_date
+      - end_date
     properties:
-      id:
-        type: "integer"
-        format: "int64"
-      name:
-        type: "string"
-    xml:
-      name: "Tag"
-  Order:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      petId:
-        type: "integer"
-        format: "int64"
-      quantity:
-        type: "integer"
-        format: "int32"
-      shipDate:
-        type: "string"
-        format: "date-time"
+      contract_number:
+        type: string
+        description: Business contract number
+      company_id:
+        type: integer
+        format: int64
+        description: Company ID
       status:
-        type: "string"
-        description: "Order Status"
-        enum:
-        - "placed"
-        - "approved"
-        - "delivered"
-      complete:
-        type: "boolean"
-    xml:
-      name: "Order"
-  Contract:
-    type: "object"
+        $ref: "#/definitions/ContractStatus"
+      start_date:
+        type: string
+        format: date-time
+        description: Contract start date
+      end_date:
+        type: string
+        format: date-time
+        description: Contract end date
+
+  ContractStatusRequest:
+    type: object
+    required:
+      - status
+    properties:
+      status:
+        $ref: "#/definitions/ContractStatus"
+
+  ContractResponse:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Internal contract ID
+      contract_number:
+        type: string
+      company_id:
+        type: integer
+        format: int64
+      status:
+        $ref: "#/definitions/ContractStatus"
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+
+  ContractUpdateStatusResponse:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      contract_number:
+        type: string
+      status:
+        $ref: "#/definitions/ContractStatus"
+
+  ServiceItem:
+    type: object
+    required:
+      - service_code
+      - is_enabled
+    properties:
+      service_code:
+        type: string
+        description: Stable business service code, e.g. trip_creation
+      is_enabled:
+        type: boolean
+        description: Whether this service is enabled for the contract
+
+  ServicesListRequest:
+    type: object
+    required:
+      - contract_id
+      - services
+    properties:
+      contract_id:
+        type: integer
+        format: int64
+        description: Contract whose service list is updated
+      services:
+        type: array
+        description: Full list of services to add/update for the contract
+        items:
+          $ref: "#/definitions/ServiceItem"
+
+  ServicesListResponse:
+    type: object
+    properties:
+      contract_id:
+        type: integer
+        format: int64
+      services:
+        type: array
+        items:
+          $ref: "#/definitions/ServiceItem"
+
+  AvailabilityResult:
+    type: object
     properties:
       company_id:
-        type: "integer"
-        format: "int64"
-      status:
-        type: "string"
-      start_date:
-        type: "string"
-        format: "date-time"
-      end_date:
-        type: "string"
-        format: "date-time"
-      services_available:
-        type: "string"
-      created_at:
-        type: "string"
-        format: "date-time"
-      updated_at:
-        type: "string"
-        format: "date-time"
-    xml:
-      name: "Contract"
-externalDocs:
-  description: "Find out more about Swagger"
-  url: "http://swagger.io"
+        type: integer
+        format: int64
+      service_code:
+        type: string
+      allowed:
+        type: boolean
+        description: true if company can use the service now
+      reason:
+        type: string
+        description: Optional reason when allowed=false
