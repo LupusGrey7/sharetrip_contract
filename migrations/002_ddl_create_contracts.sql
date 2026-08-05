@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS contracts.contracts (
     id serial NOT NULL, -- Contract ID
     contract_number text NOT NULL, -- Contract number
     company_id int NOT NULL, -- Company ID
-    status contracts.contract_status NOT NULL DEFAULT 'active', -- Contract status
+    status contracts.contract_status NOT NULL DEFAULT 'draft', -- Contract status
     start_date timestamp NOT NULL DEFAULT now(), -- Contract start date
     end_date timestamp NOT NULL DEFAULT now() + interval '1 year', -- Contract end date
     created_at timestamp NOT NULL DEFAULT now(), -- Contract created at

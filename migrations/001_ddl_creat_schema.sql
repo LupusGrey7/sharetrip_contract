@@ -1,3 +1,6 @@
+-- drop enum service_type
+DROP TYPE IF EXISTS contracts.service_type CASCADE;
+
 -- drop enum contract_status
 DROP TYPE IF EXISTS contracts.contract_status CASCADE;
 

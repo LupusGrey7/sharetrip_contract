@@ -1,9 +1,16 @@
+-- create enum service type
+CREATE TYPE contracts.service_type AS ENUM (
+    'trip_creation',
+    'trip_participants',
+    'notifications',
+    'premium_support'
+);
+
 -- Create dictionary table services
 CREATE TABLE IF NOT EXISTS contracts.services (
     id serial NOT NULL,
-    name varchar(255) NOT NULL,
+    service_code contracts.service_type NOT NULL DEFAULT 'trip_creation',
     description text,
-    service_code text NOT NULL,
     is_active boolean NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id)
 );
@@ -22,7 +29,6 @@ CREATE TABLE IF NOT EXISTS contracts.contract_services (
 );
 
 -- Index for a table
-CREATE UNIQUE INDEX IF NOT EXISTS idx_services_name ON contracts.services (name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_services_service_code ON contracts.services (service_code);
 
 -- index FRK
@@ -35,14 +41,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_contract_services_unique
 ON contracts.contract_services (contract_id, service_id);
 
 -- Add a data to a table services
-INSERT INTO contracts.services (name, description, is_active)
-VALUES ('trip_creation', 'создание поездок', TRUE) ON CONFLICT DO NOTHING;
-INSERT INTO contracts.services (name, description, is_active)
-VALUES ('trip_participants', 'добавление участников поездки', TRUE) ON CONFLICT DO NOTHING;
-INSERT INTO contracts.services (name, description, is_active)
-VALUES ('notifications', 'отправка уведомлений', TRUE) ON CONFLICT DO NOTHING;
-INSERT INTO contracts.services (name, description, is_active)
-VALUES ('premium_support', 'расширенная поддержка', TRUE) ON CONFLICT DO NOTHING;
+INSERT INTO contracts.services (service_code, description, is_active)
+VALUES ('trip_creation', 'создание поездок', TRUE) ON CONFLICT (service_code) DO NOTHING;
+INSERT INTO contracts.services (service_code, description, is_active)
+VALUES ('trip_participants', 'добавление участников поездки', TRUE) ON CONFLICT (service_code) DO NOTHING;
+INSERT INTO contracts.services (service_code, description, is_active)
+VALUES ('notifications', 'отправка уведомлений', TRUE) ON CONFLICT (service_code) DO NOTHING;
+INSERT INTO contracts.services (service_code, description, is_active)
+VALUES ('premium_support', 'расширенная поддержка', TRUE) ON CONFLICT (service_code) DO NOTHING;
 
 -- Add a description to a table
 COMMENT ON TABLE contracts.contract_services IS 'Таблица-справочник услуг доступные в рамках договора';
@@ -56,7 +62,7 @@ COMMENT ON COLUMN contracts.contract_services.is_enabled IS 'Флаг досту
 -- Add a description to a table
 COMMENT ON TABLE contracts.services IS 'Таблица-справочник услуг';
 COMMENT ON COLUMN contracts.services.id IS 'ID услуги';
-COMMENT ON COLUMN contracts.services.name IS 'Наименование услуги';
+COMMENT ON COLUMN contracts.services.service_code IS 'Код услуги';
 COMMENT ON COLUMN contracts.services.description IS 'Описание услуги';
 COMMENT ON COLUMN contracts.services.is_active IS 'Флаг активности услуги, в данный момент доступна';
 
