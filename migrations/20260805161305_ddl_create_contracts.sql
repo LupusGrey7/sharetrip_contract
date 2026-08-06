@@ -3,7 +3,7 @@
 
 -- create dictionary contract status
 CREATE TABLE IF NOT EXISTS contract_management.contract_status (
-    id VARCHAR(32) DEFAULT 'draft', -- 'draft', 'active', 'suspended', 'terminated'
+    id VARCHAR(32) NOT NULL, -- 'draft', 'active', 'suspended', 'terminated'
     description TEXT NOT NULL,
     is_editable BOOLEAN NOT NULL DEFAULT FALSE, -- metadata for business logic
     created_at TIMESTAMP NOT NULL DEFAULT NOW(), -- Contract created at
@@ -73,11 +73,11 @@ COMMENT ON COLUMN contract_management.contracts.updated_at IS 'Дата обно
 -- +goose Down
 -- +goose StatementBegin
 
-
 DROP INDEX IF EXISTS contract_management.idx_contracts_company_id;
 DROP INDEX IF EXISTS contract_management.idx_contracts_status_id;
 DROP INDEX IF EXISTS contract_management.idx_contracts_contract_number;
 DROP INDEX IF EXISTS contract_management.idx_contracts_one_active_per_company;
+
 ALTER TABLE IF EXISTS contract_management.contracts DROP CONSTRAINT IF EXISTS fk_contracts_status_id;
 
 DROP TABLE IF EXISTS contract_management.contracts;
