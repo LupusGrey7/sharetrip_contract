@@ -26,8 +26,11 @@ go/pkg/
 go.work
 go.work.sum
 
-# env file
+# env file (keep templates / safe test env in git)
 .env*
+!.env.example
+.env.test
+.active-app-env
 
 # Editor/IDE
 .idea/
