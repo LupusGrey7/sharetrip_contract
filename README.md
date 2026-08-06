@@ -130,16 +130,16 @@ Contract Service отвечает только за договорные усл�
    http code 400
    ```json
       {
-      "code": "400",
-      "message": "COMPANY_VALIDATE_ERROR"
+      "code": "COMPANY_VALIDATE_ERROR",
+      "message": "Company id is invalid"
       }
    ```
 - найти договор по company_id -> наличие у данной компании договор -> нет 
   -> возвращает ошибку со статусом http code 404
    ```json
       {
-      "code": "404",
-      "message": "CONTRACT_NOT_FOUND"
+      "code": "CONTRACT_NOT_FOUND",
+      "message": "Active contract for the company was not found"
       }
    ```
    
