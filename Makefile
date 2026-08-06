@@ -1,10 +1,36 @@
 # ============================================================
-# Check .env file
+# Env profile: APP_ENV → automatically ENV_FILE=.env.$(APP_ENV)
 # ============================================================
-ifneq (,$(wildcard ./.env))
-    include .env
-    export
+# Persist choice in .active-app-env (local, gitignored).
+#   make env-default              → back to dev / .env.dev
+#   make env-use APP_ENV=prod     → prod / .env.prod (remembered)
+# One-shot (does not change saved profile):
+#   make migrate-status APP_ENV=test
+ACTIVE_PROFILE_FILE := .active-app-env
+
+ifeq ($(origin APP_ENV),command line)
+    # one-shot or env-use: APP_ENV came from the command line
+else ifneq ($(wildcard $(ACTIVE_PROFILE_FILE)),)
+    APP_ENV := $(strip $(file < $(ACTIVE_PROFILE_FILE)))
+    ifeq ($(APP_ENV),)
+        APP_ENV := dev
+    endif
+else
+    APP_ENV := dev
 endif
+
+# Always derived from profile — do not pick ENV_FILE by hand
+ENV_FILE := .env.$(APP_ENV)
+
+ifneq (,$(wildcard $(ENV_FILE)))
+    include $(ENV_FILE)
+    export
+else
+    $(warning Env file '$(ENV_FILE)' not found. Create it or: make env-use APP_ENV=dev|prod|test)
+endif
+
+export APP_ENV
+export ENV_FILE
 
 # ============================================================
 # Check Operation System PC — единственная логика что остаётся в Makefile
@@ -27,10 +53,10 @@ GO_PKG := ./...
 APP_NAME=sharetrip_contract
 BUILD_DIR=./build
 MAIN_FILE=cmd/contract/main.go
-DB_DSN=${DB_DRIVER}://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}
+DB_DSN=$(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 MIGRATIONS_DIR = ./migrations
 DEPLOY_DIR := ./deploy
-DC := $(DEPLOY_DIR)/docker-compose.yml
+DC := $(DEPLOY_DIR)/docker/docker-compose.yml
 
 # Version and ldflags (for embedding the version into the binary)
 VERSION=1.0.0
@@ -40,30 +66,33 @@ LDFLAGS=-ldflags "-X main.Version=${VERSION}"
 .PHONY: help
 help:
 	@echo "Available targets:"
-	@echo "  deps        	  - Install tools or check their availability"
-	@echo "  fmt         	  - Code formating"
-	@echo "  lint        	  - Running the linter"
-	@echo "  test        	  - Run all tests"
-	@echo "  build           - Build a binary file"
-	@echo "  run         	  - Running an application locally"
-	@echo "  e2e         	  - End To End check an application locally"
-	@echo "  up          	  - Raise app infrastructure docker image"
-	@echo "  start        	  - Start app docker image"
-	@echo "  stop        	  - Stop app infrastructure docker image"
-	@echo "  restart         - Restart app infrastructure docker image"
-	@echo "  clean-image     - Clean all app infrastructure docker image"
-	@echo "  down        	  - Down app infrastructure docker image"
-	@echo "  migrate-up  	  - Apply migrations"
-	@echo "  migrate-down	  - Roll back the last migration"
-	@echo "  migrate-status  - Check migration status"
-	@echo "  check           - A full run, like in CI: formatting, linter, tests"
-	@echo "  coverage    	  - Run tests and generate HTML coverage report"
-	@echo "  cover       	  - Alias for coverage"
-	@echo "  vulncheck        - Vulnerability detection tool"
-	@echo "  all         	  - Run lint, tests and coverage"
-	@echo "  yaml-check      - Run yaml check tool"
-	@echo "  info            - Show information about the OS and yq"
-	@echo "  help        	  - Show this help"
+	@echo "  deps        	  	 					- install tools or check their availability"
+	@echo "  fmt         	  	 					- code formating"
+	@echo "  lint        	  	 					- run the linter"
+	@echo "  test        	  		 				- run all tests"
+	@echo "  build         	 					- build a binary file"
+	@echo "  run         	 	 					- run the application locally"
+	@echo "  e2e         	  	 					- end to end check an application locally"
+	@echo "  up          	 	 					- raise app infrastructure docker image"
+	@echo "  start         	 					    - start app infrastructure docker image"
+	@echo "  stop        	  	 					- stop app infrastructure docker image"
+	@echo "  restart        	 					- restart app infrastructure docker image"
+	@echo "  clean-image    	 					- clean all app infrastructure docker image"
+	@echo "  down        	  	 					- down app infrastructure docker image"
+	@echo "  migrate-up  	  	 					- apply migrations"
+	@echo "  migrate-down	  	 					- roll back the last migration"
+	@echo "  migrate-status  	 					- check migration status"
+	@echo "  check           	 					- run all checks: formatting, linter, tests, coverage, vulnerability detection"
+	@echo "  coverage    	  	 					- run tests and generate HTML coverage report"
+	@echo "  cover       	  						- alias for coverage"
+	@echo "  vulncheck       	 					- run vulnerability detection tool"
+	@echo "  all         	 						- run all checks: lint, tests, coverage, vulnerability detection"
+	@echo "  yaml-check     	 					- run yaml check tool"
+	@echo "  info                       				 	- show information about the OS and yq"
+	@echo "  help                        					- show this help"
+	@echo "  env-default                 					- reset profile to default (APP_ENV=dev → .env.dev)"
+	@echo "  env-use        						- switch profile; file = .env.<profile> (APP_ENV={prod|dev|test})"
+	@echo "  env-info                    					- show active APP_ENV / ENV_FILE / DB target (password masked)"
 
 # Task - Prepare environment (installation of tools)
 # If you don't want to install locally (for example, again), comment out the commands inside
@@ -166,20 +195,53 @@ else
 	$(RM_RF) $(BUILD_DIR)
 endif
 
+# Task - Reset active profile to development (default)
+.PHONY: env-default
+env-default:
+	@echo dev>$(ACTIVE_PROFILE_FILE)
+	@echo Active profile reset to default: APP_ENV=dev → ENV_FILE=.env.dev
+
+# Task - Select and remember profile (ENV_FILE follows automatically)
+# Usage: make env-use APP_ENV=dev|prod|test
+.PHONY: env-use
+env-use:
+ifeq ($(origin APP_ENV),command line)
+	@echo $(APP_ENV)>$(ACTIVE_PROFILE_FILE)
+	@echo Active profile set: APP_ENV=$(APP_ENV) → ENV_FILE=.env.$(APP_ENV)
+else
+	$(error Usage: make env-use APP_ENV=dev|prod|test)
+endif
+
+# Task - Show which env profile Make will use (safe: no password printed)
+.PHONY: env-info
+env-info:
+	@echo "APP_ENV=$(APP_ENV)"
+	@echo "ENV_FILE=$(ENV_FILE)"
+	@echo "DB_DRIVER=$(DB_DRIVER)"
+	@echo "DB_HOST=$(DB_HOST)"
+	@echo "DB_PORT=$(DB_PORT)"
+	@echo "DB_NAME=$(DB_NAME)"
+	@echo "DB_USER=$(DB_USER)"
+	@echo "DB_SSLMODE=$(DB_SSLMODE)"
+	@echo "DB_DSN=$(DB_DRIVER)://$(DB_USER):***@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)"
+
 # Task - Apply all pending migrations
 .PHONY: migrate-up
 migrate-up:
-	goose -dir $(MIGRATIONS_DIR) postgres $(DB_DSN) up
+	@echo "Using ENV_FILE=$(ENV_FILE)"
+	goose -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" up
 
 # Task - Roll back the last migration
 .PHONY: migrate-down
 migrate-down:
-	goose -dir $(MIGRATIONS_DIR) postgres $(DB_DSN) down
+	@echo "Using ENV_FILE=$(ENV_FILE)"
+	goose -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" down
 
 #Task - Check migration status
 .PHONY: migrate-status
 migrate-status:
-	goose -dir $(MIGRATIONS_DIR) postgres $(DB_DSN) status
+	@echo "Using ENV_FILE=$(ENV_FILE)"
+	goose -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" status
 
 # Task - A full run, like in CI: formatting, linter, tests
 .PHONY: check
