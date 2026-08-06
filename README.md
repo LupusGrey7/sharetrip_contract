@@ -105,7 +105,7 @@ Contract Service отвечает только за договорные усл�
 ```json
 {
   "company_id": 4829104857,
-  "service_code": "option.animal_transport",
+  "service_code": "trip_creation",
   "allowed": true,
   "reason": "The company contract status is active."
 }
@@ -130,16 +130,16 @@ Contract Service отвечает только за договорные усл�
    http code 400
    ```json
       {
-      "code": "400",
-      "message": "COMPANY_VALIDATE_ERROR"
+      "code": "COMPANY_VALIDATE_ERROR",
+      "message": "Company id is invalid"
       }
    ```
 - найти договор по company_id -> наличие у данной компании договор -> нет 
   -> возвращает ошибку со статусом http code 404
    ```json
       {
-      "code": "404",
-      "message": "CONTRACT_NOT_FOUND"
+      "code": "CONTRACT_NOT_FOUND",
+      "message": "Active contract for the company was not found"
       }
    ```
    
@@ -163,7 +163,7 @@ Contract Service отвечает только за договорные усл�
 ```json
 {
   "company_id": 4829104857,
-  "service_code": "option.animal_transport",
+  "service_code": "trip_creation",
   "allowed": false,
   "reason": "The company contract status is suspended."
 }
