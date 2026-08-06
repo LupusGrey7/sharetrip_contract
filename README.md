@@ -105,7 +105,7 @@ Contract Service отвечает только за договорные усл�
 ```json
 {
   "company_id": 4829104857,
-  "service_code": "option.animal_transport",
+  "service_code": "trip_creation",
   "allowed": true,
   "reason": "The company contract status is active."
 }
@@ -163,7 +163,7 @@ Contract Service отвечает только за договорные усл�
 ```json
 {
   "company_id": 4829104857,
-  "service_code": "option.animal_transport",
+  "service_code": "trip_creation",
   "allowed": false,
   "reason": "The company contract status is suspended."
 }

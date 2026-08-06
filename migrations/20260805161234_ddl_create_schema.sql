@@ -10,6 +10,6 @@ CREATE SCHEMA IF NOT EXISTS contract_management;
 -- +goose StatementBegin
 -- Create schema contracts
 
-DROP SCHEMA IF EXISTS contract_management;
+DROP SCHEMA IF EXISTS contract_management RESTRICT;
 
 -- +goose StatementEnd
