@@ -13,12 +13,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// stubCompanyService is a stub implementation of the CompanyService interface.
 type stubCompanyService struct {
 	resp *model.GetAvailableResultResponse
 	err  error
 	got  *model.GetAvailableOfferingByCompanyIDRequest
 }
 
+// GetAvailableOfferingByCompanyID is a stub implementation of the GetAvailableOfferingByCompanyID method.
 func (s *stubCompanyService) GetAvailableOfferingByCompanyID(
 	ctx context.Context,
 	req *model.GetAvailableOfferingByCompanyIDRequest,

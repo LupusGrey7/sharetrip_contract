@@ -40,7 +40,7 @@ func (u *ContractUseCase) CreateContract(
 		number = fmt.Sprintf("C-%d-%d", req.CompanyID, time.Now().Unix())
 	}
 
-	created, err := repo.CreateContractTx(ctx, tx, &model.Contract{
+	resp, err := repo.CreateContractTx(ctx, tx, &model.Contract{
 		ContractNumber: number,
 		CompanyID:      req.CompanyID,
 		Status:         status,
@@ -52,6 +52,6 @@ func (u *ContractUseCase) CreateContract(
 		return nil, err
 	}
 
-	logger.Debug("CreateContract completed", slog.Int("contract_id", created.ID))
-	return created, nil
+	logger.Debug("CreateContract completed", slog.Int("contract_id", resp.ID))
+	return resp, nil
 }

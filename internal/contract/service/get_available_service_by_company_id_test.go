@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// stubCompanyUseCase is a stub implementation of the CompanyUseCase interface.
 type stubCompanyUseCase struct {
 	resp *model.GetAvailableResultResponse
 	err  error
@@ -22,6 +23,7 @@ type stubCompanyUseCase struct {
 	called         bool
 }
 
+// GetAvailableOfferingByCompanyID is a stub implementation of the GetAvailableOfferingByCompanyID method.
 func (s *stubCompanyUseCase) GetAvailableOfferingByCompanyID(
 	ctx context.Context,
 	tx pgx.Tx,

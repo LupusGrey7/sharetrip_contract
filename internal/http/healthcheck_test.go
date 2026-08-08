@@ -14,11 +14,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// stubInfoUseCase is a stub implementation of the InfoUseCase interface.
 type stubInfoUseCase struct {
 	resp *model.GetHealthcheckInfoResponse
 	err  error
 }
 
+// GetHealthcheckInfo is a stub implementation of the GetHealthcheckInfo method.
 func (s stubInfoUseCase) GetHealthcheckInfo(ctx context.Context) (*model.GetHealthcheckInfoResponse, error) {
 	return s.resp, s.err
 }

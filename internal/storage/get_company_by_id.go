@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// «Компания известна системе» = есть хотя бы один договор с этим company_id.
-// Таблицы companies в миграциях нет — company_id внешний ID.
+// "Company is known to the system" = there is at least one contract with this company_id.
+// The companies table is not in the migrations - company_id is an external ID.
 const isCompanyKnownByIDQuery = `
 SELECT EXISTS(
 	SELECT 1

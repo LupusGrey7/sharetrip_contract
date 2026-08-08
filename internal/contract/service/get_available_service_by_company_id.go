@@ -13,7 +13,7 @@ func (s *CompanyService) GetAvailableOfferingByCompanyID(
 	ctx context.Context,
 	req *model.GetAvailableOfferingByCompanyIDRequest,
 ) (*model.GetAvailableResultResponse, error) {
-	// pool == nil — только unit-тесты без БД (вызов use case напрямую).
+	// pool == nil - only unit tests without DB (direct use case call).
 	if s.pool == nil {
 		res, err := s.useCase.GetAvailableOfferingByCompanyID(
 			ctx, nil, s.offeringRepo, s.companyRepo, req,
