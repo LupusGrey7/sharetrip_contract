@@ -2,20 +2,25 @@ package usecase
 
 import (
 	"context"
+
 	"job4j/sharetrip-contract/internal/contract/model"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
 )
 
-// BaseOfferingUseCase is the interface for the offering use case.
 type BaseOfferingUseCase interface {
-	UpsertContractServices(ctx context.Context, tx pgx.Tx, repo storage.BaseTxOfferingRepository, request *model.UpsertContractOfferingsRequest) (*model.UpsertContractOfferingsResponse, error)
-	GetOfferingByCode(ctx context.Context, tx pgx.Tx, repo storage.BaseTxOfferingRepository, request *model.GetOfferingByCodeRequest) (*model.GetOfferingByCodeResponse, error)
+	UpsertContractServices(
+		ctx context.Context,
+		tx pgx.Tx,
+		contractRepo storage.BaseTxContractRepository,
+		offeringRepo storage.BaseTxOfferingRepository,
+		linkRepo storage.BaseTxContractOfferingRepository,
+		request *model.UpsertContractServicesRequest,
+	) (*model.UpsertContractServicesResponse, error)
 }
 
-type OfferingUseCase struct {
-}
+type OfferingUseCase struct{}
 
 func NewOfferingUseCase() *OfferingUseCase {
 	return &OfferingUseCase{}

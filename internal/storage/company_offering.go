@@ -1,5 +1,5 @@
 package storage
 
-// Company offering / contract_services repository will live here.
-// Placeholder keeps the package buildable while healthcheck is finalized.
-// Do not use company_services table — project schema uses contract_management.contract_services.
+// company_offering.go removed as active code.
+// Links live in contract_offering.go → table contract_management.contract_services.
+// There is no company_services table in migrations.

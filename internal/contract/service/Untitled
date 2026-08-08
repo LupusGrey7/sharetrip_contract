@@ -1,18 +1,8 @@
-package service
-
-import (
-	"context"
-	"fmt"
-	"job4j/sharetrip-contract/internal/contract/model"
-	"log/slog"
-	"os"
-)
-
 // GetHealthcheckInfo checks that the process can reach PostgreSQL.
 // No DB transaction: healthcheck is a read-only ping, not a business write.
-func (s *HealthcheckService) GetHealthcheckInfo(ctx context.Context) (*model.GetHealthcheckInfoResponse, error) {
+func (s *InfoService) GetHealthcheckInfo(ctx context.Context) (*model.GetHealthcheckInfoResponse, error) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
-		slog.String("service", "HealthcheckService"),
+		slog.String("service", "InfoService"),
 		slog.String("operation", "GetHealthcheckInfo"),
 	)
 	logger.Debug("get healthcheck info started")

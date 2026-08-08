@@ -9,19 +9,19 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *ContractService) GetContractByID(
+func (s *ContractService) CreateContract(
 	ctx context.Context,
-	request *model.GetContractByIDRequest,
+	request *model.CreateContractRequest,
 ) (*model.ContractResponse, error) {
 	res, err := tx(ctx, s.pool, func(pgTx pgx.Tx) (*model.ContractResponse, error) {
-		contract, err := s.useCase.GetContractByID(ctx, pgTx, s.repo, request)
+		contract, err := s.useCase.CreateContract(ctx, pgTx, s.repo, request)
 		if err != nil {
 			return nil, err
 		}
 		return model.ContractToResponse(contract), nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("GetContractByID: %w", err)
+		return nil, fmt.Errorf("CreateContract: %w", err)
 	}
 	return res, nil
 }

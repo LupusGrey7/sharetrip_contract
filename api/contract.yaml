@@ -326,8 +326,37 @@ definitions:
       status:
         $ref: "#/definitions/ContractStatus"
 
+  ContractResponse:
+    type: object
+    description: Full contract representation
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Internal contract ID
+      contract_number:
+        type: string
+      company_id:
+        type: integer
+        format: int64
+      status:
+        $ref: "#/definitions/ContractStatus"
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+
   ContractStatusResponse:
     type: object
+    description: Same shape as ContractResponse (legacy name in paths)
     properties:
       id:
         type: integer

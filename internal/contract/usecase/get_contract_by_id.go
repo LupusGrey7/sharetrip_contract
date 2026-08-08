@@ -1,13 +1,13 @@
-// scenario: get contract by id - business logic + repository
 package usecase
 
 import (
 	"context"
 	"errors"
-	"job4j/sharetrip-contract/internal/contract/model"
-	"job4j/sharetrip-contract/internal/storage"
 	"log/slog"
 	"os"
+
+	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -18,24 +18,22 @@ func (u *ContractUseCase) GetContractByID(
 	repo storage.BaseTxContractRepository,
 	req *model.GetContractByIDRequest,
 ) (*model.Contract, error) {
-	//logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
 		slog.String("layer", "useCase"),
-		slog.String("useCase", "ContractUseCase.GetContractByID"),
+		slog.String("useCase", "GetContractByID"),
 		slog.Int("contract_id", req.ContractID),
 	)
-	logger.Debug("GetContractByID useCase started")
+	logger.Debug("GetContractByID started")
 
 	contract, err := repo.GetContractByIDTx(ctx, tx, req.ContractID)
 	if err != nil {
-		logger.Error("GetContractByID useCase failed", slog.Any("error", err))
+		logger.Error("GetContractByID failed", slog.Any("error", err))
 		if errors.Is(err, storage.ErrContractNotFound) {
 			return nil, ErrContractNotFound
 		}
-		// If this is not a ErrEntityNotFound, This means it's a system error (500 error)
 		return nil, err
 	}
 
-	logger.Debug("GetContractByID useCase completed")
+	logger.Debug("GetContractByID completed")
 	return contract, nil
 }

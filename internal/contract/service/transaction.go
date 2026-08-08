@@ -24,36 +24,23 @@ func tx[T interface{}](
 
 	txBegin, err := pool.Begin(ctx)
 	if err != nil {
-		logger.Error(
-			"failed to begin transaction",
-			slog.Any("error", err),
-		)
-
+		logger.Error("failed to begin transaction", slog.Any("error", err))
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	res, err := block(txBegin)
 	if err != nil {
-		logger.Error(
-			"transaction block failed",
-			slog.Any("error", err),
-		)
-
-		return nil, fmt.Errorf("err tx block() with: %w", err)
+		logger.Error("transaction block failed", slog.Any("error", err))
+		if rbErr := txBegin.Rollback(ctx); rbErr != nil {
+			logger.Error("rollback transaction failed", slog.Any("error", rbErr))
+		}
+		return nil, err
 	}
 
 	if err = txBegin.Commit(ctx); err != nil {
-		// If the commit fails, we also try to roll back (although this may not work)
-		logger.Error(
-			"failed to commit transaction",
-			slog.Any("error", err),
-		)
-
+		logger.Error("failed to commit transaction", slog.Any("error", err))
 		if rbErr := txBegin.Rollback(ctx); rbErr != nil {
-			logger.Error(
-				"rollback transaction failed",
-				slog.Any("error", rbErr),
-			)
+			logger.Error("rollback transaction failed", slog.Any("error", rbErr))
 		}
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}

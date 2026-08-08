@@ -7,19 +7,20 @@ import (
 )
 
 // Server — HTTP-адаптер (как internal/api.Server в прошлых проектах лида).
-// Routes и методы Get*/Healthcheck живут в этом же пакете http.
+// Routes и handler-методы живут в этом же пакете http.
+// Сервисы — через interface, чтобы handler-тесты могли подставлять stub.
 type Server struct {
 	Validator          *validator.Validate
-	HealthcheckService *service.HealthcheckService
-	ContractService    *service.ContractService
-	OfferingService    *service.OfferingService
+	HealthcheckService service.BaseHealthcheck
+	ContractService    service.Contract
+	OfferingService    service.Offering
 }
 
 func NewServer(
 	validator *validator.Validate,
-	healthcheckService *service.HealthcheckService,
-	contractService *service.ContractService,
-	offeringService *service.OfferingService,
+	healthcheckService service.BaseHealthcheck,
+	contractService service.Contract,
+	offeringService service.Offering,
 ) *Server {
 	return &Server{
 		Validator:          validator,

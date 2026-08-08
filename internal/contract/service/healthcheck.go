@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"job4j/sharetrip-contract/internal/contract/model"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 )
@@ -11,9 +12,9 @@ type BaseHealthcheck interface {
 }
 
 type HealthcheckService struct {
-	useCase usecase.BaseInfoUseCase
+	useCase usecase.BaseHealthcheckUseCase
 }
 
-func NewHealthcheckService(useCase usecase.BaseInfoUseCase) *HealthcheckService {
+func NewHealthcheckService(useCase usecase.BaseHealthcheckUseCase) *HealthcheckService {
 	return &HealthcheckService{useCase: useCase}
 }

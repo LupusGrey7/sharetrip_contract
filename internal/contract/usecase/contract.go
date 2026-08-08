@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+
 	"job4j/sharetrip-contract/internal/contract/model"
 	"job4j/sharetrip-contract/internal/storage"
 
@@ -10,10 +11,10 @@ import (
 
 type BaseContractUseCase interface {
 	GetContractByID(ctx context.Context, tx pgx.Tx, repo storage.BaseTxContractRepository, request *model.GetContractByIDRequest) (*model.Contract, error)
+	CreateContract(ctx context.Context, tx pgx.Tx, repo storage.BaseTxContractRepository, request *model.CreateContractRequest) (*model.Contract, error)
 }
 
-type ContractUseCase struct {
-}
+type ContractUseCase struct{}
 
 func NewContractUseCase() *ContractUseCase {
 	return &ContractUseCase{}

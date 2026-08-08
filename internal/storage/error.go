@@ -6,6 +6,7 @@ const (
 	errQueryByID          = "error querying by ID: %d: %w"
 	errOfferingNotFound   = "offering not found"
 	errSelectEntityFailed = "error selecting entity: %w"
+	errContractNotFound   = "contract not found"
 )
 
 var (
@@ -17,6 +18,6 @@ var (
 	ErrInvalidData        = errors.New("invalid data")
 	ErrInvalidTransaction = errors.New("invalid transaction")
 	ErrInvalidConnection  = errors.New("invalid connection")
-	ErrContractNotFound   = errors.New("contract not found")
-	ErrOfferingNotFound   = errors.New("offering not found")
+	ErrContractNotFound   = errors.New(errContractNotFound)
+	ErrOfferingNotFound   = errors.New(errOfferingNotFound)
 )

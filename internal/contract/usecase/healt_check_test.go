@@ -16,8 +16,8 @@ func (s stubHealthRepo) CheckHealth(ctx context.Context) error {
 	return s.err
 }
 
-func TestInfoUseCase_GetHealthcheckInfo_OK(t *testing.T) {
-	uc := usecase.NewInfoUseCase(stubHealthRepo{})
+func TestHealthcheckUseCase_GetHealthcheckInfo_OK(t *testing.T) {
+	uc := usecase.NewHealthcheckUseCase(stubHealthRepo{})
 	resp, err := uc.GetHealthcheckInfo(context.Background())
 	if err != nil {
 		t.Fatalf("GetHealthcheckInfo: %v", err)
@@ -27,8 +27,8 @@ func TestInfoUseCase_GetHealthcheckInfo_OK(t *testing.T) {
 	}
 }
 
-func TestInfoUseCase_GetHealthcheckInfo_DBError(t *testing.T) {
-	uc := usecase.NewInfoUseCase(stubHealthRepo{err: errors.New("boom")})
+func TestHealthcheckUseCase_GetHealthcheckInfo_DBError(t *testing.T) {
+	uc := usecase.NewHealthcheckUseCase(stubHealthRepo{err: errors.New("boom")})
 	_, err := uc.GetHealthcheckInfo(context.Background())
 	if err == nil {
 		t.Fatal("expected error")

@@ -12,13 +12,6 @@ import (
 )
 
 // New is the composition root: repo -> usecase -> service -> http.Server -> Fiber.
-//
-// Why not only http.NewServer?
-//
-//	http.NewServer — HTTP adapter; needs already-built services.
-//	app.New        — builds the full dependency chain from pool.
-//
-// If wiring stays in main, package app is pointless.
 func New(pool *pgxpool.Pool) *fiber.App {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
@@ -31,8 +24,9 @@ func New(pool *pgxpool.Pool) *fiber.App {
 	contractSvc := service.NewContractService(pool, contractRepo, contractUC)
 
 	offeringRepo := storage.NewOfferingRepository(pool)
+	linkRepo := storage.NewContractOfferingRepository(pool)
 	offeringUC := usecase.NewOfferingUseCase()
-	offeringSvc := service.NewOfferingService(pool, offeringRepo, offeringUC)
+	offeringSvc := service.NewOfferingService(pool, contractRepo, offeringRepo, linkRepo, offeringUC)
 
 	httpSrv := httpserver.NewServer(validate, healthcheckService, contractSvc, offeringSvc)
 	fiberApp := fiber.New()
