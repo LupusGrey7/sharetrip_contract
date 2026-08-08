@@ -4,8 +4,6 @@ import (
 	"log/slog"
 	"os"
 
-	"job4j/sharetrip-contract/internal/contract/model"
-
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,7 +14,7 @@ func (s *Server) UpsertContractServices(ctx *fiber.Ctx) error {
 	)
 	logger.Debug("UpsertContractServices started")
 
-	var req model.UpsertContractServicesRequest
+	var req UpsertServicesRequest
 	if err := ctx.BodyParser(&req); err != nil {
 		logger.Warn("UpsertContractServices parse failed", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidRequest.Error())
@@ -29,12 +27,13 @@ func (s *Server) UpsertContractServices(ctx *fiber.Ctx) error {
 		}
 	}
 
-	resp, err := s.OfferingService.UpsertContractServices(ctx.UserContext(), &req)
+	resp, err := s.OfferingService.UpsertContractServices(ctx.UserContext(), toUpsertInput(&req))
 	if err != nil {
 		logger.Error("UpsertContractServices failed", slog.Any("error", err))
 		return HandleError(ctx, err)
 	}
 
-	logger.Debug("UpsertContractServices completed", slog.Int("contract_id", resp.ContractID))
-	return ctx.Status(fiber.StatusOK).JSON(resp)
+	out := toUpsertResponse(resp)
+	logger.Debug("UpsertContractServices completed", slog.Int("contract_id", out.ContractID))
+	return ctx.Status(fiber.StatusOK).JSON(out)
 }

@@ -30,10 +30,7 @@ func (s *Server) GetContractByID(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
 	}
 
-	req := model.GetContractByIDRequest{
-		ContractID: contractIDInt,
-	}
-
+	req := model.GetContractByIDRequest{ContractID: contractIDInt}
 	if s.Validator != nil {
 		if err := s.Validator.Struct(&req); err != nil {
 			logger.Error("get contract by id failed: invalid request", slog.Any("error", err))
@@ -47,6 +44,7 @@ func (s *Server) GetContractByID(ctx *fiber.Ctx) error {
 		return HandleError(ctx, err)
 	}
 
+	out := toContractResponse(resp)
 	logger.Debug("get contract by id completed", slog.String("contract_id", contractID))
-	return ctx.Status(fiber.StatusOK).JSON(resp)
+	return ctx.Status(fiber.StatusOK).JSON(out)
 }

@@ -247,7 +247,7 @@ paths:
         200:
           description: Availability check result
           schema:
-            $ref: "#/definitions/AvailabilityResult"
+            $ref: "#/definitions/GetAvailableResultResponse"
         400:
           description: Invalid request
           schema:
@@ -441,14 +441,24 @@ definitions:
         items:
           $ref: "#/definitions/ServiceItem"
 
-  AvailabilityResult:
+  GetAvailableResultResponse:
     type: object
+    required:
+      - company_id
+      - service_code
     properties:
       company_id:
         type: integer
         format: int64
       service_code:
         type: string
+        enum:
+          - trip_creation
+          - trip_participants
+          - notifications
+          - premium_support
+        description: Business service code
+        example: trip_creation
       allowed:
         type: boolean
         description: true if company can use the service now

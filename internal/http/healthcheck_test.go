@@ -26,7 +26,7 @@ func (s stubInfoUseCase) GetHealthcheckInfo(ctx context.Context) (*model.GetHeal
 func newTestApp(t *testing.T, uc stubInfoUseCase) *fiber.App {
 	t.Helper()
 	healthcheckSvc := service.NewHealthcheckService(uc)
-	srv := NewServer(nil, healthcheckSvc, nil, nil)
+	srv := NewServer(nil, healthcheckSvc, nil, nil, nil)
 	fiberApp := fiber.New()
 	srv.SetupRoutes(fiberApp)
 	return fiberApp
@@ -52,7 +52,7 @@ func TestHealthcheck_OK(t *testing.T) {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	var got model.GetHealthcheckInfoResponse
+	var got HealthcheckResponse
 	if err := json.Unmarshal(body, &got); err != nil {
 		t.Fatalf("json: %v body=%s", err, body)
 	}

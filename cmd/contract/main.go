@@ -9,6 +9,7 @@ import (
 
 	"job4j/sharetrip-contract/internal/app"
 	"job4j/sharetrip-contract/internal/config"
+	httpserver "job4j/sharetrip-contract/internal/http"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/joho/godotenv"
@@ -45,9 +46,11 @@ func main() {
 
 	log.Printf("Connected to database successfully")
 
-	// Initialize the fiber app
 	fiberApp := app.New(pool)
 	addr := fmt.Sprintf(":%s", config.Env("HTTP_PORT", "8080"))
+
+	httpserver.LogRegisteredRoutes(addr)
+
 	log.Printf("listening on %s", addr)
 	if err := fiberApp.Listen(addr); err != nil {
 		log.Fatal(err)

@@ -17,12 +17,12 @@ func (s *Server) Healthcheck(ctx *fiber.Ctx) error {
 	resp, err := s.HealthcheckService.GetHealthcheckInfo(ctx.UserContext())
 	if err != nil {
 		logger.Error("healthcheck failed", slog.Any("error", err))
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"status":  "error",
-			"message": "database unavailable",
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(HealthcheckResponse{
+			Status:  "error",
+			Message: "database unavailable",
 		})
 	}
 
 	logger.Debug("healthcheck completed")
-	return ctx.Status(fiber.StatusOK).JSON(resp)
+	return ctx.Status(fiber.StatusOK).JSON(toHealthcheckResponse(resp))
 }

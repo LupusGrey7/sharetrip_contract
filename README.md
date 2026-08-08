@@ -187,6 +187,18 @@ make e2e
 
 6. Если услуга недоступна, сервис ShareTrip возвращает отказ.
 
+
+---
+### Доступные url
+after migrate → run app
+
+```curl
+POST /api/v2/contracts/
+PUT  /api/v2/services   (trip_creation, is_enabled: true)
+GET  /api/v2/contracts/{id}
+GET  /healthcheck
+``
+
 ## Технологический стек
 
 - Go

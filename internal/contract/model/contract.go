@@ -11,7 +11,7 @@ const (
 	ContractStatusTerminated ContractStatus = "terminated"
 )
 
-// Contract — сущность договора (колонки = contract_management.contracts).
+// Contract — сущность договора (колонки = contract_management.contracts). Без JSON — это не HTTP DTO.
 type Contract struct {
 	ID             int
 	ContractNumber string
@@ -23,40 +23,40 @@ type Contract struct {
 	UpdatedAt      time.Time
 }
 
-// CreateContractRequest = OpenAPI ContractRequest (без списка услуг — услуги через PUT /services).
+// CreateContractRequest — вход usecase/service (не wire JSON; JSON живёт в internal/http/dto.go).
 type CreateContractRequest struct {
-	CompanyID      int            `json:"company_id" validate:"required,min=1"`
-	ContractNumber string         `json:"contract_number" validate:"omitempty,min=1"`
-	Status         ContractStatus `json:"status" validate:"omitempty,oneof=draft active suspended terminated"`
-	StartDate      time.Time      `json:"start_date" validate:"required"`
-	EndDate        time.Time      `json:"end_date" validate:"required"`
+	CompanyID      int
+	ContractNumber string
+	Status         ContractStatus
+	StartDate      time.Time
+	EndDate        time.Time
 }
 
-// ContractResponse = OpenAPI ContractResponse / ContractStatusResponse.
+// ContractResponse — результат сценария для отдачи наружу через http mapper.
 type ContractResponse struct {
-	ID             int            `json:"id"`
-	ContractNumber string         `json:"contract_number"`
-	CompanyID      int            `json:"company_id"`
-	Status         ContractStatus `json:"status"`
-	StartDate      time.Time      `json:"start_date"`
-	EndDate        time.Time      `json:"end_date"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
+	ID             int
+	ContractNumber string
+	CompanyID      int
+	Status         ContractStatus
+	StartDate      time.Time
+	EndDate        time.Time
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type GetContractByIDRequest struct {
-	ContractID int `json:"contract_id" validate:"required,min=1"`
+	ContractID int `validate:"required,min=1"`
 }
 
 type ChangeContractStatusRequest struct {
-	ContractID int            `json:"contract_id" validate:"required,min=1"`
-	Status     ContractStatus `json:"status" validate:"required,oneof=draft active suspended terminated"`
+	ContractID int
+	Status     ContractStatus
 }
 
 type ChangeContractStatusResponse struct {
-	ID             int            `json:"id"`
-	ContractNumber string         `json:"contract_number"`
-	Status         ContractStatus `json:"status"`
+	ID             int
+	ContractNumber string
+	Status         ContractStatus
 }
 
 func ContractToResponse(c *Contract) *ContractResponse {

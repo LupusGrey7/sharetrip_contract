@@ -28,7 +28,10 @@ func New(pool *pgxpool.Pool) *fiber.App {
 	offeringUC := usecase.NewOfferingUseCase()
 	offeringSvc := service.NewOfferingService(pool, contractRepo, offeringRepo, linkRepo, offeringUC)
 
-	httpSrv := httpserver.NewServer(validate, healthcheckService, contractSvc, offeringSvc)
+	companyUC := usecase.NewCompanyUseCase()
+	companySvc := service.NewCompanyService(companyUC)
+
+	httpSrv := httpserver.NewServer(validate, healthcheckService, contractSvc, offeringSvc, companySvc)
 	fiberApp := fiber.New()
 	httpSrv.SetupRoutes(fiberApp)
 	return fiberApp

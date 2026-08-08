@@ -97,7 +97,7 @@ func TestUpsertContractServices_HTTP_200(t *testing.T) {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
 	}
-	var got model.UpsertContractServicesResponse
+	var got UpsertServicesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
 		t.Fatal(err)
 	}

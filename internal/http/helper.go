@@ -11,24 +11,24 @@ import (
 func HandleError(c *fiber.Ctx, err error) error {
 	switch {
 	case errors.Is(err, ErrInvalidIDParamFormat), errors.Is(err, ErrInvalidRequest), errors.Is(err, usecase.ErrInvalidRequest):
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"code":    "COMPANY_VALIDATE_ERROR",
-			"message": err.Error(),
+		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
+			Code:    "COMPANY_VALIDATE_ERROR",
+			Message: err.Error(),
 		})
 	case errors.Is(err, ErrContractNotFound), errors.Is(err, usecase.ErrContractNotFound):
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"code":    "CONTRACT_NOT_FOUND",
-			"message": err.Error(),
+		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
+			Code:    "CONTRACT_NOT_FOUND",
+			Message: err.Error(),
 		})
 	case errors.Is(err, usecase.ErrServiceNotFound):
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"code":    "SERVICE_NOT_FOUND",
-			"message": err.Error(),
+		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
+			Code:    "SERVICE_NOT_FOUND",
+			Message: err.Error(),
 		})
 	default:
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"code":    "INTERNAL_SERVER_ERROR",
-			"message": err.Error(),
+		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Code:    "INTERNAL_SERVER_ERROR",
+			Message: err.Error(),
 		})
 	}
 }

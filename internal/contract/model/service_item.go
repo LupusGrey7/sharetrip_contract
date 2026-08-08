@@ -2,25 +2,23 @@ package model
 
 import "time"
 
-// ServiceItem = OpenAPI ServiceItem (связь договора с услугой, без contract_id в item).
+// ServiceItem — связь договор↔услуга (домен/application). JSON-форма — http.ServiceItemDTO.
 type ServiceItem struct {
-	ServiceCode string `json:"service_code" validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
-	IsEnabled   bool   `json:"is_enabled" validate:"required,boolean"`
+	ServiceCode string
+	IsEnabled   bool
 }
 
-// UpsertContractServicesRequest = OpenAPI UpsertServicesRequest.
 type UpsertContractServicesRequest struct {
-	ContractID int           `json:"contract_id" validate:"required,min=1"`
-	Services   []ServiceItem `json:"services" validate:"required,min=1,dive"`
+	ContractID int
+	Services   []ServiceItem
 }
 
-// UpsertContractServicesResponse = OpenAPI UpsertServicesResponse.
 type UpsertContractServicesResponse struct {
-	ContractID int           `json:"contract_id" validate:"required,min=1"`
-	Services   []ServiceItem `json:"services" validate:"required,min=1,dive"`
+	ContractID int
+	Services   []ServiceItem
 }
 
-// Offering — словарь services (не путать с contract_services).
+// Offering — словарь services.
 type Offering struct {
 	ServiceCode string
 	Description string

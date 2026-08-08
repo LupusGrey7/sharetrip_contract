@@ -14,6 +14,7 @@ type Server struct {
 	HealthcheckService service.BaseHealthcheck
 	ContractService    service.Contract
 	OfferingService    service.Offering
+	CompanyService     service.Company
 }
 
 func NewServer(
@@ -21,11 +22,13 @@ func NewServer(
 	healthcheckService service.BaseHealthcheck,
 	contractService service.Contract,
 	offeringService service.Offering,
+	companyService service.Company,
 ) *Server {
 	return &Server{
 		Validator:          validator,
 		HealthcheckService: healthcheckService,
 		ContractService:    contractService,
 		OfferingService:    offeringService,
+		CompanyService:     companyService,
 	}
 }
