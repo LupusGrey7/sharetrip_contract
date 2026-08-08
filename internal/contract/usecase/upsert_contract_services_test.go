@@ -25,6 +25,16 @@ func (s stubOfferingDictRepo) GetOfferingByCodeTx(ctx context.Context, tx pgx.Tx
 	return nil, storage.ErrOfferingNotFound
 }
 
+func (s stubOfferingDictRepo) IsOfferingExistsByCodeTx(ctx context.Context, tx pgx.Tx, code string) error {
+	if s.err != nil {
+		return s.err
+	}
+	if len(s.missing) > 0 {
+		return storage.ErrOfferingNotFound
+	}
+	return nil
+}
+
 type stubLinkRepo struct {
 	items []model.ServiceItem
 	err   error

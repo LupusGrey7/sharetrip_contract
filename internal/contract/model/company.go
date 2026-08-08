@@ -10,8 +10,8 @@ const (
 	ServiceCodePremiumSupport   ServiceCodeType = "premium_support"
 )
 
-// GetAvailableServiceByCompanyIDRequest — вход usecase (не HTTP DTO).
-type GetAvailableServiceByCompanyIDRequest struct {
+// GetAvailableOfferingByCompanyIDRequest — вход usecase (не HTTP DTO).
+type GetAvailableOfferingByCompanyIDRequest struct {
 	CompanyID   int             `validate:"required,min=1"`
 	ServiceCode ServiceCodeType `validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
 }

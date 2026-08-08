@@ -227,33 +227,57 @@ paths:
       summary: Check service availability for company
       description: >
         Business check for ShareTrip: can company use the given service now
-        (active contract, not expired, service enabled).
+        (company known via contracts, service_code exists in dictionary,
+        active contract has the service enabled).
+
+        Distinct outcomes:
+        - 404 COMPANY_NOT_FOUND — no contracts for this company_id;
+        - 404 SERVICE_NOT_FOUND — service_code not in services dictionary;
+        - 200 allowed=true/false — company and code exist; false means
+          no active link / disabled (see reason).
       operationId: checkServiceAvailabilityForCompany
       produces:
         - application/json
       parameters:
         - name: companyId
           in: path
-          description: Company ID
+          description: External company ID (company_id on contracts)
           required: true
           type: integer
           format: int64
+          minimum: 1
+          example: 42
         - name: serviceCode
           in: path
           description: Stable business service code, e.g. trip_creation
           required: true
           type: string
+          enum:
+            - trip_creation
+            - trip_participants
+            - notifications
+            - premium_support
+          example: trip_creation
       responses:
         200:
-          description: Availability check result
+          description: >
+            Availability result. allowed=false is a successful business answer,
+            not an HTTP error (company and service_code are known).
           schema:
-            $ref: "#/definitions/GetAvailableResultResponse"
+            $ref: "#/definitions/AvailabilityResult"
+          examples:
+            application/json:
+              company_id: 42
+              service_code: trip_creation
+              allowed: true
         400:
-          description: Invalid request
+          description: Invalid companyId or serviceCode
           schema:
             $ref: "#/definitions/Error"
         404:
-          description: Company, contract or service not found
+          description: >
+            Company unknown (COMPANY_NOT_FOUND) or service_code missing
+            from dictionary (SERVICE_NOT_FOUND)
           schema:
             $ref: "#/definitions/Error"
         500:
@@ -275,6 +299,7 @@ definitions:
         description: Error code
         enum:
           - COMPANY_VALIDATE_ERROR
+          - COMPANY_NOT_FOUND
           - CONTRACT_NOT_FOUND
           - SERVICE_NOT_FOUND
           - SERVICE_DISABLED
@@ -441,15 +466,18 @@ definitions:
         items:
           $ref: "#/definitions/ServiceItem"
 
-  GetAvailableResultResponse:
+  AvailabilityResult:
     type: object
+    description: Result of service availability check for a company
     required:
       - company_id
       - service_code
+      - allowed
     properties:
       company_id:
         type: integer
         format: int64
+        example: 42
       service_code:
         type: string
         enum:
@@ -462,6 +490,8 @@ definitions:
       allowed:
         type: boolean
         description: true if company can use the service now
+        example: true
       reason:
         type: string
         description: Optional reason when allowed=false
+        example: no active contract with this service

@@ -61,5 +61,5 @@ func (s *Server) SetupRoutes(app *fiber.App) {
 	contracts.Get(contractGetByIdPath, s.GetContractByID)
 
 	companies := v2.Group(CompaniesPath)
-	companies.Get(companyServiceAvailabilityPath, s.GetAvailableServiceByCompanyID)
+	companies.Get(companyServiceAvailabilityPath, s.GetAvailableOfferingByCompanyID)
 }

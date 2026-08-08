@@ -12,15 +12,26 @@ import (
 
 // Company — сценарии availability по компании (методы — в отдельных файлах).
 type Company interface {
-	GetAvailableServiceByCompanyID(ctx context.Context, req *model.GetAvailableServiceByCompanyIDRequest) (*model.GetAvailableResultResponse, error)
+	GetAvailableOfferingByCompanyID(ctx context.Context, req *model.GetAvailableOfferingByCompanyIDRequest) (*model.GetAvailableResultResponse, error)
 }
 
 type CompanyService struct {
-	pool        *pgxpool.Pool
-	companyRepo storage.BaseCompanyRepository
-	useCase     usecase.BaseCompanyUseCase
+	pool         *pgxpool.Pool
+	offeringRepo storage.BaseTxOfferingRepository
+	companyRepo  storage.BaseCompanyRepository
+	useCase      usecase.BaseCompanyUseCase
 }
 
-func NewCompanyService(useCase usecase.BaseCompanyUseCase) *CompanyService {
-	return &CompanyService{useCase: useCase}
+func NewCompanyService(
+	pool *pgxpool.Pool,
+	offeringRepo storage.BaseTxOfferingRepository,
+	companyRepo storage.BaseCompanyRepository,
+	useCase usecase.BaseCompanyUseCase,
+) *CompanyService {
+	return &CompanyService{
+		pool:         pool,
+		offeringRepo: offeringRepo,
+		companyRepo:  companyRepo,
+		useCase:      useCase,
+	}
 }

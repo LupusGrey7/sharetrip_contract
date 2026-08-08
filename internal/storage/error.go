@@ -7,6 +7,7 @@ const (
 	errOfferingNotFound   = "offering not found"
 	errSelectEntityFailed = "error selecting entity: %w"
 	errContractNotFound   = "contract not found"
+	errCompanyNotFound    = "company not found"
 )
 
 var (
@@ -20,4 +21,6 @@ var (
 	ErrInvalidConnection  = errors.New("invalid connection")
 	ErrContractNotFound   = errors.New(errContractNotFound)
 	ErrOfferingNotFound   = errors.New(errOfferingNotFound)
+	ErrSelectEntityFailed = errors.New(errSelectEntityFailed)
+	ErrCompanyNotFound    = errors.New(errCompanyNotFound)
 )

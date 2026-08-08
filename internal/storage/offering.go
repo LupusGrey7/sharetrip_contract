@@ -9,10 +9,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// BaseTxOfferingRepository — словарь services (без upsert словаря в PUT /services).
+// BaseTxOfferingRepository — словарь services.
 type BaseTxOfferingRepository interface {
 	ExistServiceCodesTx(ctx context.Context, tx pgx.Tx, codes []string) (missing []string, err error)
 	GetOfferingByCodeTx(ctx context.Context, tx pgx.Tx, code string) (*model.Offering, error)
+	IsOfferingExistsByCodeTx(ctx context.Context, tx pgx.Tx, code string) error
 }
 
 type OfferingRepository struct {
