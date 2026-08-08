@@ -197,12 +197,12 @@ paths:
           description: Contract ID and list of services to enable/disable
           required: true
           schema:
-            $ref: "#/definitions/ServicesListRequest"
+            $ref: "#/definitions/UpsertServicesRequest"
       responses:
         200:
           description: Services list updated
           schema:
-            $ref: "#/definitions/ServicesListResponse"
+            $ref: "#/definitions/UpsertServicesResponse"
         400:
           description: Invalid request
           schema:
@@ -326,7 +326,7 @@ definitions:
       status:
         $ref: "#/definitions/ContractStatus"
 
-  ContractResponse:
+  ContractStatusResponse:
     type: object
     properties:
       id:
@@ -372,12 +372,20 @@ definitions:
     properties:
       service_code:
         type: string
-        description: Stable business service code, e.g. trip_creation
+        enum:
+          - trip_creation
+          - trip_participants
+          - notifications
+          - premium_support
+        description: Business service code
+        example: trip_creation
       is_enabled:
         type: boolean
+        default: false
         description: Whether this service is enabled for the contract
+        example: false
 
-  ServicesListRequest:
+  UpsertServicesRequest:
     type: object
     required:
       - contract_id
@@ -393,7 +401,7 @@ definitions:
         items:
           $ref: "#/definitions/ServiceItem"
 
-  ServicesListResponse:
+  UpsertServicesResponse:
     type: object
     properties:
       contract_id:

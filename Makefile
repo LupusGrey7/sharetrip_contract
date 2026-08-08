@@ -153,9 +153,9 @@ run:
 .PHONY: e2e
 e2e:
 ifeq ($(OS),Windows_NT)
-	powershell -NoProfile -Command "$$r = Invoke-WebRequest -Uri http://localhost:8080/ready -UseBasicParsing; if ($$r.Content -notmatch 'OK') { exit 1 }"
+	powershell -NoProfile -Command "$$r = Invoke-WebRequest -Uri http://localhost:8080/healthcheck -UseBasicParsing; if ($$r.StatusCode -ne 200) { exit 1 }; if ($$r.Content -notmatch '\"status\"\s*:\s*\"ok\"') { exit 1 }"
 else
-	curl -f http://localhost:8080/ready | grep -q "OK"
+	curl -sf http://localhost:8080/healthcheck | grep -q '"status":"ok"'
 endif
 
 # ============================================================

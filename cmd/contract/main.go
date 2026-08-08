@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
-	"job4j/share_trip_contract/internal/config"
-	"job4j/share_trip_contract/internal/storage"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+
+	"job4j/sharetrip-contract/internal/app"
+	"job4j/sharetrip-contract/internal/config"
+	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/joho/godotenv"
 )
@@ -38,14 +41,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer pool.Close()
 
-	// logging connection to DB
-	if pingErr := pool.Ping(ctx); pingErr != nil {
-		log.Fatalf("failed to ping database: %v", pingErr)
-	}
 	log.Printf("Connected to database successfully")
+
+	// Initialize the fiber app
+	fiberApp := app.New(pool)
+	addr := fmt.Sprintf(":%s", config.Env("HTTP_PORT", "8080"))
+	log.Printf("listening on %s", addr)
+	if err := fiberApp.Listen(addr); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func readCfg() storage.Config {
