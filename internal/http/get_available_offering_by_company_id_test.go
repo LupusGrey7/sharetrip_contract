@@ -54,7 +54,11 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Allowed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
@@ -96,7 +100,11 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Denied(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status=%d", resp.StatusCode)
 	}
@@ -126,7 +134,11 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Company(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if resp.StatusCode != http.StatusNotFound {
 		t.Fatalf("status=%d", resp.StatusCode)
 	}
@@ -156,7 +168,11 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Service(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if resp.StatusCode != http.StatusNotFound {
 		t.Fatalf("status=%d", resp.StatusCode)
 	}
@@ -186,7 +202,11 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_BadCompanyID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if resp.StatusCode != http.StatusBadRequest {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
@@ -211,7 +231,11 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_InvalidServiceCode(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if resp.StatusCode != http.StatusBadRequest {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("status=%d body=%s", resp.StatusCode, b)

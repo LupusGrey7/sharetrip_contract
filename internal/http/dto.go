@@ -2,13 +2,13 @@ package http
 
 import "time"
 
-// HTTP DTO = форма OpenAPI / JSON на границе API.
-// Внутрь (service/usecase/storage) уходят типы из internal/contract/model — через mapper.
+// HTTP DTO = form OpenAPI / JSON on the API boundary.
+// Inside (service/usecase/storage) go types from internal/contract/model — through mapper.
 
 type CreateContractRequest struct {
-	CompanyID      int    `json:"company_id" validate:"required,min=1"`
-	ContractNumber string `json:"contract_number" validate:"omitempty,min=1"`
-	Status         string `json:"status" validate:"omitempty,oneof=draft active suspended terminated"`
+	CompanyID      int       `json:"company_id" validate:"required,min=1"`
+	ContractNumber string    `json:"contract_number" validate:"omitempty,min=1"`
+	Status         string    `json:"status" validate:"omitempty,oneof=draft active suspended terminated"`
 	StartDate      time.Time `json:"start_date" validate:"required"`
 	EndDate        time.Time `json:"end_date" validate:"required"`
 }

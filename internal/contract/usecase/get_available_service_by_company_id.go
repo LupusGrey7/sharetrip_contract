@@ -13,11 +13,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// GetAvailableOfferingByCompanyID — три явные проверки → три разных исхода для клиента.
+// GetAvailableOfferingByCompanyID — three explicit checks → three different outcomes for the client.
 //
-//  1. company известна (есть договор с company_id)     → иначе ErrCompanyNotFound
-//  2. service_code есть в словаре services             → иначе ErrServiceNotFound (offering)
-//  3. финальный join: active + contract_services        → 200 + allowed/reason (не 404)
+//  1. check: company exists = at least one contract with this company_id     → and ErrCompanyNotFound
+//  2. check: service exists in the dictionary             → and ErrServiceNotFound (offering)
+//  3. final check: active + contract_services        → 200 + allowed/reason (not 404)
 func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -31,11 +31,7 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 	)
 	log.Debug("get available offering by company id started")
 
-	if req == nil || req.CompanyID < 1 || req.ServiceCode == "" {
-		return nil, fmt.Errorf("%w: company_id and service_code required", ErrInvalidRequest)
-	}
-
-	// 1) компания «есть у нас» = хотя бы один contract с этим company_id
+	// 1)check: company exists = at least one contract with this company_id
 	if err := companyRepo.IsCompanyKnownByIDTx(ctx, tx, req.CompanyID); err != nil {
 		if errors.Is(err, storage.ErrCompanyNotFound) {
 			return nil, ErrCompanyNotFound
@@ -43,7 +39,7 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 		return nil, fmt.Errorf("IsCompanyKnownByIDTx: %w", err)
 	}
 
-	// 2) услуга есть в словаре
+	// 2)check: service exists in the dictionary
 	if err := offeringRepo.IsOfferingExistsByCodeTx(ctx, tx, string(req.ServiceCode)); err != nil {
 		if errors.Is(err, storage.ErrOfferingNotFound) {
 			return nil, ErrServiceNotFound
@@ -51,7 +47,7 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 		return nil, fmt.Errorf("IsOfferingExistsByCodeTx: %w", err)
 	}
 
-	// 3) бизнес-ответ: можно ли пользоваться прямо сейчас
+	// 3)final check: active + contract_services
 	resp, err := companyRepo.GetAvailableOfferingByCompanyIDTx(ctx, tx, req.CompanyID, req.ServiceCode)
 	if err != nil {
 		return nil, fmt.Errorf("GetAvailableOfferingByCompanyIDTx: %w", err)

@@ -29,10 +29,6 @@ func (u *OfferingUseCase) UpsertContractServices(
 	)
 	logger.Debug("UpsertContractServices started")
 
-	if req == nil || len(req.Services) == 0 {
-		return nil, fmt.Errorf("%w: services required", ErrInvalidRequest)
-	}
-
 	// 1) lock parent contract
 	_, err := contractRepo.GetContractByIDForUpdateTx(ctx, tx, req.ContractID)
 	if err != nil {

@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// ServiceItem — связь договор↔услуга (домен/application). JSON-форма — http.ServiceItemDTO.
+// ServiceItem — contract↔service (domain/application). JSON-form — http.ServiceItemDTO.
 type ServiceItem struct {
 	ServiceCode string
 	IsEnabled   bool
@@ -18,7 +18,7 @@ type UpsertContractServicesResponse struct {
 	Services   []ServiceItem
 }
 
-// Offering — словарь services.
+// Offering — dictionary of services.
 type Offering struct {
 	ServiceCode string
 	Description string
