@@ -13,9 +13,10 @@ const (
 	ContractPath    = "/contracts"
 	ServicesPath    = "/services"
 	CompaniesPath   = "/companies"
+	OpenAPISpecPath = "/openapi.yaml"
 
-	contractGetByIdPath              = "/:contractId"
-	companyServiceAvailabilityPath   = "/:companyId/services/:serviceCode/availability"
+	contractGetByIdPath            = "/:contractId"
+	companyServiceAvailabilityPath = "/:companyId/services/:serviceCode/availability"
 )
 
 // RouteInfo — method + path for logging at startup.
@@ -29,6 +30,7 @@ type RouteInfo struct {
 func RegisteredRoutes() []RouteInfo {
 	return []RouteInfo{
 		{Method: "GET", Path: HealthcheckPath, Note: "liveness / DB ping"},
+		{Method: "GET", Path: GroupPrefixV2 + OpenAPISpecPath, Note: "OpenAPI yaml (import in Swagger Editor)"},
 		{Method: "POST", Path: GroupPrefixV2 + ContractPath + "/", Note: "create contract"},
 		{Method: "GET", Path: GroupPrefixV2 + ContractPath + "/{contractId}", Note: "get contract by id"},
 		{Method: "PUT", Path: GroupPrefixV2 + ServicesPath, Note: "upsert contract services (e.g. trip_creation)"},
@@ -54,6 +56,7 @@ func (s *Server) SetupRoutes(app *fiber.App) {
 	app.Get(HealthcheckPath, s.Healthcheck)
 
 	v2 := app.Group(GroupPrefixV2)
+	v2.Get(OpenAPISpecPath, s.GetOpenAPISpec)
 	v2.Put(ServicesPath, s.UpsertContractServices)
 
 	contracts := v2.Group(ContractPath)

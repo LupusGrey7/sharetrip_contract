@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
-  description: "ShareTrip Contract Service API. Manages company contracts and service availability."
-  version: "1.0.1"
+  description: "ShareTrip Contract Service API. Manages company contracts and service availability. OpenAPI file: api/contract.yaml — open in Swagger Editor (https://editor.swagger.io → Import file) or GET /api/v2/openapi.yaml from a running service."
+  version: "1.0.2"
   title: "ShareTrip Contract Service"
   contact:
     email: "contracts_service@mail.io"
@@ -14,10 +14,44 @@ tags:
     description: Services available under a contract
   - name: companies
     description: Company-scoped contract checks
+  - name: docs
+    description: API documentation (OpenAPI artifact)
 schemes:
   - https
   - http
 paths:
+  /openapi.yaml:
+    get:
+      tags:
+        - docs
+      summary: Get OpenAPI specification (contract.yaml)
+      description: >
+        Returns the contents of api/contract.yaml from the service process working directory.
+
+        This does NOT open Swagger Editor in the browser by itself — it serves the YAML file.
+        To view in Swagger Editor: https://editor.swagger.io → File → Import file
+        (use the repo file api/contract.yaml, or save this response and import it).
+
+        See also: .docs/cheatsheets/swagger-ui-cheatsheet.md
+      operationId: getOpenAPISpec
+      produces:
+        - application/yaml
+        - text/yaml
+        - application/json
+      responses:
+        200:
+          description: OpenAPI 2.0 document (YAML)
+          schema:
+            type: file
+        404:
+          description: Spec file not found on disk (wrong working directory)
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+
   /contracts:
     post:
       tags:

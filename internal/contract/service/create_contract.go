@@ -13,7 +13,7 @@ func (s *ContractService) CreateContract(
 	ctx context.Context,
 	request *model.CreateContractRequest,
 ) (*model.ContractResponse, error) {
-	// pool == nil — только unit-тесты без БД (вызов use case напрямую).
+	// pool == nil — only unit tests without DB (direct use case call).
 	if s.pool == nil {
 		contract, err := s.useCase.CreateContract(ctx, nil, s.repo, request)
 		if err != nil {

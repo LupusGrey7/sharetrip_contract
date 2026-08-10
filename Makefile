@@ -37,11 +37,11 @@ export ENV_FILE
 # ============================================================
 ifeq ($(OS),Windows_NT)
     DETECTED_OS := Windows
-    YAML_CHECK_SCRIPT := scripts\yaml-check.bat
+    YAML_CHECK_SCRIPT := scripts\checkos\yaml-check.bat
     RM_RF = if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)"
 else
     DETECTED_OS := $(shell uname -s)
-    YAML_CHECK_SCRIPT := bash scripts/yaml-check.sh
+    YAML_CHECK_SCRIPT := bash scripts/checkos/yaml-check.sh
     RM_RF = rm -rf
 endif
 
@@ -55,6 +55,8 @@ BUILD_DIR=./build
 MAIN_FILE=cmd/contract/main.go
 DB_DSN=$(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 MIGRATIONS_DIR = ./migrations
+SEEDS_DIR := ./scripts/seeds
+GOOSE_SEED_TABLE := goose_seed_version
 DEPLOY_DIR := ./deploy
 DC := $(DEPLOY_DIR)/docker/docker-compose.yml
 
@@ -82,6 +84,9 @@ help:
 	@echo "  migrate-up  	  	 					- apply migrations"
 	@echo "  migrate-down	  	 					- roll back the last migration"
 	@echo "  migrate-status  	 					- check migration status"
+	@echo "  seed            	 					- apply dev seed data (demo company 42 + trip_creation)"
+	@echo "  seed-down       	 					- roll back last seed"
+	@echo "  seed-status     	 					- check seed version status"
 	@echo "  check           	 					- run all checks: formatting, linter, tests, coverage, vulnerability detection"
 	@echo "  coverage    	  	 					- run tests and generate HTML coverage report"
 	@echo "  cover       	  						- alias for coverage"
@@ -160,7 +165,7 @@ endif
 
 # ============================================================
 # Task - Raise infrastructure (PostgreSQL in Docker)
-# It is assumed that you have a docker-compose.yml in the ./deploy/docker-compose.yml directory
+# Compose file: ./deploy/docker/docker-compose.yml
 # ============================================================
 .PHONY: up down restart start stop logs clean-image
 # Task - Start all services
@@ -242,6 +247,23 @@ migrate-down:
 migrate-status:
 	@echo "Using ENV_FILE=$(ENV_FILE)"
 	goose -dir $(MIGRATIONS_DIR) postgres "$(DB_DSN)" status
+
+# Dev/demo data (separate from DDL). Dir: scripts/seeds. Table: goose_seed_version (not goose_db_version).
+# Precheck inside scripts/seeds/*.sql (IF NOT EXISTS / RAISE) — goose has no Liquibase preConditions.
+.PHONY: seed
+seed:
+	@echo "Using ENV_FILE=$(ENV_FILE) SEEDS_DIR=$(SEEDS_DIR)"
+	goose -dir $(SEEDS_DIR) -table $(GOOSE_SEED_TABLE) postgres "$(DB_DSN)" up
+
+.PHONY: seed-down
+seed-down:
+	@echo "Using ENV_FILE=$(ENV_FILE) SEEDS_DIR=$(SEEDS_DIR)"
+	goose -dir $(SEEDS_DIR) -table $(GOOSE_SEED_TABLE) postgres "$(DB_DSN)" down
+
+.PHONY: seed-status
+seed-status:
+	@echo "Using ENV_FILE=$(ENV_FILE) SEEDS_DIR=$(SEEDS_DIR)"
+	goose -dir $(SEEDS_DIR) -table $(GOOSE_SEED_TABLE) postgres "$(DB_DSN)" status
 
 # Task - A full run, like in CI: formatting, linter, tests
 .PHONY: check
