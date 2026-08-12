@@ -18,19 +18,11 @@ func (s *Server) GetContractByID(ctx *fiber.Ctx) error {
 	)
 	logger.Debug("GetContractByID http started")
 
-	contractID := ctx.Params("contractId")
-	if contractID == "" {
-		logger.Warn("get contract by id failed: invalid request", slog.String("error", ErrInvalidIDParamFormat.Error()))
+	var req model.GetContractByIDRequest
+	if err := ctx.ParamsParser(&req); err != nil {
+		logger.Warn("get contract by id failed: invalid path params", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
 	}
-
-	contractIDInt, err := strconv.Atoi(contractID)
-	if err != nil {
-		logger.Error("get contract by id failed: invalid request", slog.Any("error", err))
-		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
-	}
-
-	req := model.GetContractByIDRequest{ContractID: contractIDInt}
 	if s.Validator != nil {
 		if err := s.Validator.Struct(&req); err != nil {
 			logger.Error("get contract by id failed: invalid request", slog.Any("error", err))
@@ -45,6 +37,6 @@ func (s *Server) GetContractByID(ctx *fiber.Ctx) error {
 	}
 
 	out := toContractResponse(resp)
-	logger.Debug("get contract by id completed", slog.String("contract_id", contractID))
+	logger.Debug("get contract by id completed", slog.String("contract_id", strconv.Itoa(req.ContractID)))
 	return ctx.Status(fiber.StatusOK).JSON(out)
 }

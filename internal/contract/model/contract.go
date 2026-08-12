@@ -45,7 +45,9 @@ type ContractResponse struct {
 }
 
 type GetContractByIDRequest struct {
-	ContractID int `validate:"required,min=1"`
+	// tagm params — field for Fiber ParamsParser (name in URL :contractId).
+	// tag validate — field for Fiber Validator (name in URL :contractId).
+	ContractID int `params:"contractId" validate:"required,min=1"`
 }
 
 type ChangeContractStatusRequest struct {
