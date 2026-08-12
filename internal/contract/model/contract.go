@@ -2,8 +2,10 @@ package model
 
 import "time"
 
+// ContractStatus — status of contract.
 type ContractStatus string
 
+// ContractStatus values.
 const (
 	ContractStatusDraft      ContractStatus = "draft"
 	ContractStatusActive     ContractStatus = "active"
@@ -11,7 +13,7 @@ const (
 	ContractStatusTerminated ContractStatus = "terminated"
 )
 
-// Contract — сущность договора (колонки = contract_management.contracts). Без JSON — это не HTTP DTO.
+// Contract — entity of contract (columns = contract_management.contracts). Without JSON — this is not HTTP DTO.
 type Contract struct {
 	ID             int
 	ContractNumber string
@@ -23,7 +25,7 @@ type Contract struct {
 	UpdatedAt      time.Time
 }
 
-// CreateContractRequest — вход usecase/service (не wire JSON; JSON живёт в internal/http/dto.go).
+// CreateContractRequest — enter for usecase/service (not wire JSON; JSON lives in internal/http/dto.go).
 type CreateContractRequest struct {
 	CompanyID      int
 	ContractNumber string
@@ -32,7 +34,7 @@ type CreateContractRequest struct {
 	EndDate        time.Time
 }
 
-// ContractResponse — результат сценария для отдачи наружу через http mapper.
+// ContractResponse — result of scenario for sending outside through http mapper.
 type ContractResponse struct {
 	ID             int
 	ContractNumber string
@@ -45,8 +47,8 @@ type ContractResponse struct {
 }
 
 type GetContractByIDRequest struct {
-	// tagm params — field for Fiber ParamsParser (name in URL :contractId).
-	// tag validate — field for Fiber Validator (name in URL :contractId).
+	// params — name of segment in URL (:contractId) for Fiber ParamsParser.
+	// validate — rules go-playground/validator after parsing.
 	ContractID int `params:"contractId" validate:"required,min=1"`
 }
 

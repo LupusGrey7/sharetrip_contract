@@ -1,6 +1,6 @@
 package model
 
-// ServiceCodeType — код услуги из словаря contract_management.services.
+// ServiceCodeType — code of service from contract_management.services dictionary.
 type ServiceCodeType string
 
 const (
@@ -10,13 +10,13 @@ const (
 	ServiceCodePremiumSupport   ServiceCodeType = "premium_support"
 )
 
-// GetAvailableOfferingByCompanyIDRequest — вход usecase (не HTTP DTO).
+// GetAvailableOfferingByCompanyIDRequest — enter for Fiber ParamsParser and usecase.
 type GetAvailableOfferingByCompanyIDRequest struct {
-	CompanyID   int             `validate:"required,min=1"`
-	ServiceCode ServiceCodeType `validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
+	CompanyID   int             `params:"companyId" validate:"required,min=1"`
+	ServiceCode ServiceCodeType `params:"serviceCode" validate:"required,oneof=trip_creation trip_participants notifications premium_support"` // TODO: add validation for service code
 }
 
-// GetAvailableResultResponse — результат availability usecase (HTTP-форма — в http/dto).
+// GetAvailableResultResponse — result of availability usecase (HTTP-form — in http/dto).
 type GetAvailableResultResponse struct {
 	CompanyID   int
 	ServiceCode ServiceCodeType

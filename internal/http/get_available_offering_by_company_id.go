@@ -19,43 +19,29 @@ func (s *Server) GetAvailableOfferingByCompanyID(ctx *fiber.Ctx) error {
 	)
 	logger.Debug("GetAvailableOfferingByCompanyID http started")
 
-	companyID := ctx.Params("companyId")
-	if companyID == "" {
-		logger.Warn("invalid request", slog.String("error", ErrInvalidIDParamFormat.Error()))
+	var req model.GetAvailableOfferingByCompanyIDRequest
+	if err := ctx.ParamsParser(&req); err != nil {
+		logger.Warn("invalid path params", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
-	}
-
-	companyIDInt, err := strconv.Atoi(companyID)
-	if err != nil {
-		logger.Error("invalid request", slog.Any("error", err))
-		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
-	}
-
-	serviceCode := ctx.Params("serviceCode")
-	if serviceCode == "" {
-		logger.Warn("invalid request", slog.String("error", ErrInvalidRequest.Error()))
-		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidRequest.Error())
-	}
-
-	modelRequest := &model.GetAvailableOfferingByCompanyIDRequest{
-		CompanyID:   companyIDInt,
-		ServiceCode: model.ServiceCodeType(serviceCode),
 	}
 
 	if s.Validator != nil {
-		if err := s.Validator.Struct(modelRequest); err != nil {
+		if err := s.Validator.Struct(&req); err != nil {
 			logger.Error("invalid request", slog.Any("error", err))
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	}
 
-	resp, err := s.CompanyService.GetAvailableOfferingByCompanyID(ctx.UserContext(), modelRequest)
+	resp, err := s.CompanyService.GetAvailableOfferingByCompanyID(ctx.UserContext(), &req)
 	if err != nil {
 		logger.Error("GetAvailableOfferingByCompanyID failed", slog.Any("error", err))
 		return HandleError(ctx, err)
 	}
 
 	out := toAvailabilityResponse(resp)
-	logger.Debug("GetAvailableOfferingByCompanyID success", slog.Any("response", out))
+	logger.Debug("GetAvailableOfferingByCompanyID success",
+		slog.String("company_id", strconv.Itoa(req.CompanyID)),
+		slog.Bool("allowed", out.Allowed),
+	)
 	return ctx.Status(fiber.StatusOK).JSON(out)
 }
