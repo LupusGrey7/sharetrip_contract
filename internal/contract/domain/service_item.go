@@ -44,17 +44,11 @@ type OfferingEntity struct {
 func ServiceItemEntitiesToOutput(entities []ServiceItemEntity) []ServiceItemOutput {
 	output := make([]ServiceItemOutput, 0, len(entities))
 	for _, entity := range entities {
-		output = append(output, ServiceItemOutput{
-			ServiceCode: entity.ServiceCode,
-			IsEnabled:   entity.IsEnabled,
-		})
+		output = append(output, ServiceItemOutput(entity))
 	}
 	return output
 }
 
 func ServiceItemInputToEntity(input ServiceItemInput) ServiceItemEntity {
-	return ServiceItemEntity{
-		ServiceCode: input.ServiceCode,
-		IsEnabled:   input.IsEnabled,
-	}
+	return ServiceItemEntity(input)
 }
