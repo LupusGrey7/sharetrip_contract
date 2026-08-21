@@ -94,6 +94,24 @@ make e2e
 
 ```
 
+#### Автоматические тесты
+
+Быстрые unit/component-тесты и интеграционный API-набор:
+
+```powershell
+make test
+```
+
+Только реальная цепочка `HTTP → service → usecase → storage → PostgreSQL` через Testcontainers:
+
+```powershell
+make test-integration
+```
+
+Integration-тест сам запускает PostgreSQL и получает DSN через `container.ConnectionString`. Локальный `.env.test` и `DATABASE_URL` ему не нужны. Docker должен быть запущен.
+
+Подробно: [как выбирать component, integration и E2E-тесты](.docs/cheatsheets/component-integration-e2e-testing-cheatsheet.md).
+
 ### Алгоритм проверки доступности услуги
 
 ##### Бизнес-сценарий (happy path)
@@ -205,6 +223,7 @@ GET  /healthcheck
 - PostgreSQL
 - SQL-миграции
 - Docker / docker-compose
+- Testcontainers for Go
 
 ## Документация проекта
 

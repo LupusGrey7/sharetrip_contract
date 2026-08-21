@@ -72,6 +72,7 @@ help:
 	@echo "  fmt         	  	 					- code formating"
 	@echo "  lint        	  	 					- run the linter"
 	@echo "  test        	  		 				- run all tests"
+	@echo "  test-integration							- run API integration tests with Testcontainers"
 	@echo "  build         	 					- build a binary file"
 	@echo "  run         	 	 					- run the application locally"
 	@echo "  e2e         	  	 					- end to end check an application locally"
@@ -132,6 +133,10 @@ endif
 .PHONY: test
 test:
 	$(GO) test -v $(GO_PKG)
+
+.PHONY: test-integration
+test-integration:
+	$(GO) test -count=1 -v ./internal/api/apitest
 
 # Task - Clean builds (Deletes compiled files)
 .PHONY: clean
