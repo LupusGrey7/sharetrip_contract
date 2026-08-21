@@ -9,9 +9,7 @@ import (
 
 func TestGetOpenAPISpec_HTTP_200(t *testing.T) {
 	root := findRepoRoot(t)
-	if err := os.Chdir(root); err != nil {
-		t.Fatal(err)
-	}
+	changeWorkingDirectory(t, root)
 
 	srv := &Server{
 		ContractService: stubContractService{},
@@ -39,6 +37,32 @@ func TestGetOpenAPISpec_HTTP_200(t *testing.T) {
 	}
 }
 
+func TestGetOpenAPISpec_HTTP_404(t *testing.T) {
+	changeWorkingDirectory(t, t.TempDir())
+
+	srv := &Server{
+		ContractService: stubContractService{},
+		OfferingService: stubOfferingService{},
+		CompanyService:  &stubCompanyService{},
+	}
+	app := newRoutesApp(t, srv)
+
+	req, _ := http.NewRequest(http.MethodGet, "/api/v2/openapi.yaml", nil)
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("status=%d, want 404", resp.StatusCode)
+	}
+}
+
 func findRepoRoot(t *testing.T) string {
 	t.Helper()
 	wd, err := os.Getwd()
@@ -58,4 +82,21 @@ func findRepoRoot(t *testing.T) string {
 	}
 	t.Fatal("api/contract.yaml not found from", wd)
 	return ""
+}
+
+func changeWorkingDirectory(t *testing.T, path string) {
+	t.Helper()
+
+	previous, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(path); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(previous); err != nil {
+			t.Errorf("restore working directory: %v", err)
+		}
+	})
 }
