@@ -1,86 +1,64 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
+	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 )
 
-const (
-	DevelopmentEnv  = "development"
-	ProductionEnv   = "production"
-	defaultHTTPPort = "8080"
-)
-
-// Config holds application settings loaded from environment variables.
+// Config contains all process-level application settings.
 type Config struct {
-	DatabaseURL string
-	HTTPPort    string
+	Environment string `env:"ENV" env-default:"development"`
+	HTTPPort    string `env:"HTTP_PORT" env-default:"8080"`
+	Database    DatabaseConfig
 }
 
-// Load reads .env from the working directory (if present), then builds Config from env.
-// DATABASE_URL is required. HTTP_PORT defaults to 8080 when unset.
-func LoadWithDevEnvFile() (Config, error) {
-	return LoadWithEnvFile(DefaultEnvDevFile)
+// DatabaseConfig contains PostgreSQL connection settings.
+type DatabaseConfig struct {
+	Driver   string `env:"DB_DRIVER" env-default:"postgres"`
+	Host     string `env:"DB_HOST" env-default:"localhost"`
+	Port     int    `env:"DB_PORT" env-default:"6547"`
+	User     string `env:"DB_USER" env-default:"postgres"`
+	Password string `env:"DB_PASSWORD" env-default:"password"`
+	Name     string `env:"DB_NAME" env-default:"sharetrip_contract"`
+	SSLMode  string `env:"DB_SSLMODE" env-default:"disable"`
 }
 
-// LoadWithEnvFile loads the given dotenv file when it exists, then reads process env.
-// Useful in tests. Pass "" to skip loading a file and use only os.Getenv.
+// DSN builds a pgx-compatible PostgreSQL connection string.
+func (c DatabaseConfig) DSN() string {
+	return fmt.Sprintf(
+		"%s://%s:%s@%s:%d/%s?sslmode=%s",
+		c.Driver,
+		c.User,
+		c.Password,
+		c.Host,
+		c.Port,
+		c.Name,
+		c.SSLMode,
+	)
+}
+
+// Load parses typed application settings from process environment variables.
+// CI and production should provide settings through the process environment.
+func Load() (Config, error) {
+	var cfg Config
+	if err := cleanenv.ReadEnv(&cfg); err != nil {
+		return Config{}, fmt.Errorf("read config from environment: %w", err)
+	}
+
+	return cfg, nil
+}
+
+// LoadWithEnvFile loads an optional local dotenv file and then parses Config.
+// Existing process variables win over file values, which is required for CI.
 func LoadWithEnvFile(envFile string) (Config, error) {
 	if envFile != "" {
-		if err := loadEnvFile(envFile); err != nil {
-			return Config{}, err
+		if err := godotenv.Load(envFile); err != nil && !os.IsNotExist(err) {
+			return Config{}, fmt.Errorf("load env file %q: %w", envFile, err)
 		}
 	}
 
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		return Config{}, errors.New("DATABASE_URL is required")
-	}
-
-	port := os.Getenv("HTTP_PORT")
-	if port == "" {
-		port = defaultHTTPPort
-	}
-
-	return Config{
-		DatabaseURL: dbURL,
-		HTTPPort:    port,
-	}, nil
-}
-
-func loadEnvFile(path string) error {
-	// First check if the file exists
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			// File does not exist - this is normal (optional file)
-			return nil
-		}
-		return fmt.Errorf("stat env file %q: %w", path, err)
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("read env file %q: %w", path, err)
-	}
-
-	parsed, err := godotenv.Unmarshal(string(data))
-	if err != nil {
-		return fmt.Errorf("parse env file %q: %w", path, err)
-	}
-
-	for k, v := range parsed {
-		if _, exists := os.LookupEnv(k); !exists || os.Getenv(k) == "" {
-			if err := os.Setenv(k, v); err != nil {
-				return fmt.Errorf("set env %q: %w", k, err)
-			}
-		}
-	}
-
-	// Debug logging
-	_, _ = fmt.Fprintf(os.Stderr, "DEBUG: Successfully loaded env from %s\n", path)
-	_, _ = fmt.Fprintf(os.Stderr, "DEBUG: After load - DATABASE_URL=%q, HTTP_PORT=%q\n", os.Getenv("DATABASE_URL"), os.Getenv("HTTP_PORT"))
-	return nil
+	return Load()
 }

@@ -6,162 +6,147 @@ import (
 	"testing"
 )
 
-// clearConfigEnvVars drops keys that LoadWithEnvFile fills from a dotenv file.
-// Needed when tests run under `make test`: Makefile includes .env.dev and exports
-// DATABASE_URL/HTTP_PORT/ENV, and loadEnvFile does not override non-empty process env.
-func clearConfigEnvVars() {
-	_ = os.Unsetenv("DATABASE_URL")
-	_ = os.Unsetenv("HTTP_PORT")
-	_ = os.Unsetenv("ENV")
-}
+func TestLoad_readsTypedEnvironment(t *testing.T) {
+	t.Setenv("ENV", "test")
+	t.Setenv("HTTP_PORT", "9090")
+	t.Setenv("DB_HOST", "postgres.test")
+	t.Setenv("DB_PORT", "7777")
+	t.Setenv("DB_USER", "test_user")
+	t.Setenv("DB_PASSWORD", "test_password")
+	t.Setenv("DB_NAME", "contract_test")
+	t.Setenv("DB_SSLMODE", "require")
 
-func TestMain(m *testing.M) {
-	clearConfigEnvVars()
-	if _, err := LoadTestEnvFile(); err != nil {
-		_, _ = os.Stderr.WriteString("config tests: load " + DefaultEnvTestFile + ": " + err.Error() + "\n")
-		os.Exit(1)
-	}
-	os.Exit(m.Run())
-}
-
-func TestLoad_fromEnvTest(t *testing.T) {
-	// Isolate from Make-exported .env.dev (and from other tests).
-	t.Setenv("DATABASE_URL", "")
-	t.Setenv("HTTP_PORT", "")
-	t.Setenv("ENV", "")
-
-	// go test runs with cwd = package dir; resolve from module root.
-	path, err := ResolveEnvFile(DefaultEnvTestFile)
-	if err != nil {
-		t.Fatalf("ResolveEnvFile: %v", err)
-	}
-
-	cfg, err := LoadWithEnvFile(path)
+	cfg, err := Load()
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 
-	const wantURL = "postgres://test_user:test_password@localhost:6547/contract_test?sslmode=disable"
-	if cfg.DatabaseURL != wantURL {
-		t.Fatalf("DatabaseURL = %q, want %q", cfg.DatabaseURL, wantURL)
+	if cfg.Environment != "test" {
+		t.Fatalf("Environment = %q, want test", cfg.Environment)
 	}
-	if cfg.HTTPPort != "8081" {
-		t.Fatalf("HTTPPort = %q, want 8081 from .env.test", cfg.HTTPPort)
+	if cfg.HTTPPort != "9090" {
+		t.Fatalf("HTTPPort = %q, want 9090", cfg.HTTPPort)
 	}
-	if os.Getenv("ENV") != "test" {
-		t.Fatalf("ENV = %q, want test from .env.test", os.Getenv("ENV"))
+	if cfg.Database.Port != 7777 {
+		t.Fatalf("Database.Port = %d, want 7777", cfg.Database.Port)
+	}
+
+	const wantDSN = "postgres://test_user:test_password@postgres.test:7777/contract_test?sslmode=require"
+	if got := cfg.Database.DSN(); got != wantDSN {
+		t.Fatalf("Database.DSN() = %q, want %q", got, wantDSN)
 	}
 }
 
-func TestLoadTest_explicitFile(t *testing.T) {
-	path, err := ResolveEnvFile(DefaultEnvTestFile)
+func TestLoad_usesDefaultsWithoutLocalEnvFile(t *testing.T) {
+	unsetEnv(t,
+		"ENV",
+		"HTTP_PORT",
+		"DB_DRIVER",
+		"DB_HOST",
+		"DB_PORT",
+		"DB_USER",
+		"DB_PASSWORD",
+		"DB_NAME",
+		"DB_SSLMODE",
+	)
+
+	cfg, err := Load()
 	if err != nil {
-		t.Fatalf("ResolveEnvFile: %v", err)
+		t.Fatalf("Load: %v", err)
 	}
 
-	cfg, err := LoadWithEnvFile(path)
+	if cfg.HTTPPort != "8080" {
+		t.Fatalf("HTTPPort = %q, want 8080", cfg.HTTPPort)
+	}
+	if cfg.Database.Host != "localhost" {
+		t.Fatalf("Database.Host = %q, want localhost", cfg.Database.Host)
+	}
+	if cfg.Database.Port != 6547 {
+		t.Fatalf("Database.Port = %d, want 6547", cfg.Database.Port)
+	}
+}
+
+func TestLoad_rejectsInvalidTypedValue(t *testing.T) {
+	t.Setenv("DB_PORT", "not-a-number")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected an error for invalid DB_PORT")
+	}
+}
+
+func TestLoadWithEnvFile_readsOptionalLocalFile(t *testing.T) {
+	unsetEnv(t, "HTTP_PORT", "DB_HOST", "DB_PORT")
+
+	envPath := filepath.Join(t.TempDir(), ".env.test")
+	content := []byte("HTTP_PORT=8081\nDB_HOST=postgres.from.file\nDB_PORT=7654\n")
+	if err := os.WriteFile(envPath, content, 0o600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	cfg, err := LoadWithEnvFile(envPath)
 	if err != nil {
 		t.Fatalf("LoadWithEnvFile: %v", err)
 	}
-	if cfg.DatabaseURL == "" {
-		t.Fatal("expected DATABASE_URL from " + DefaultEnvTestFile)
+
+	if cfg.HTTPPort != "8081" {
+		t.Fatalf("HTTPPort = %q, want 8081", cfg.HTTPPort)
+	}
+	if cfg.Database.Host != "postgres.from.file" {
+		t.Fatalf("Database.Host = %q, want postgres.from.file", cfg.Database.Host)
+	}
+	if cfg.Database.Port != 7654 {
+		t.Fatalf("Database.Port = %d, want 7654", cfg.Database.Port)
 	}
 }
 
-func TestLoadWithEnvFile_missingFileUsesProcessEnv(t *testing.T) {
-	t.Setenv("DATABASE_URL", "postgres://test_user:test_password@localhost:6547/contract_test?sslmode=disable")
-	t.Setenv("HTTP_PORT", "")
+func TestLoadWithEnvFile_processEnvironmentWins(t *testing.T) {
+	t.Setenv("DB_HOST", "postgres.from.process")
+
+	envPath := filepath.Join(t.TempDir(), ".env.test")
+	if err := os.WriteFile(envPath, []byte("DB_HOST=postgres.from.file\n"), 0o600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	cfg, err := LoadWithEnvFile(envPath)
+	if err != nil {
+		t.Fatalf("LoadWithEnvFile: %v", err)
+	}
+
+	if cfg.Database.Host != "postgres.from.process" {
+		t.Fatalf("Database.Host = %q, want process environment value", cfg.Database.Host)
+	}
+}
+
+func TestLoadWithEnvFile_missingFileUsesEnvironment(t *testing.T) {
+	t.Setenv("DB_HOST", "postgres.from.process")
 
 	cfg, err := LoadWithEnvFile(filepath.Join(t.TempDir(), "missing.env"))
 	if err != nil {
 		t.Fatalf("LoadWithEnvFile: %v", err)
 	}
-
-	if cfg.DatabaseURL != "postgres://test_user:test_password@localhost:6547/contract_test?sslmode=disable" {
-		t.Fatalf("DatabaseURL = %q", cfg.DatabaseURL)
-	}
-	if cfg.HTTPPort != "8080" {
-		t.Fatalf("HTTPPort = %q, want default 8080", cfg.HTTPPort)
+	if cfg.Database.Host != "postgres.from.process" {
+		t.Fatalf("Database.Host = %q, want postgres.from.process", cfg.Database.Host)
 	}
 }
 
-// for example, with description and debug logs to stderr
-func TestLoadWithEnvFile_fromDotEnv(t *testing.T) {
-	// === ПОДГОТОВКА (Arrange) ===
-	// Создаём временную папку и .env файл с кастомными значениями
-	// Это нужно, чтобы тестировать загрузку конфига из конкретного файла
-	dir := t.TempDir()
-	envPath := filepath.Join(dir, "custom.env")
+func unsetEnv(t *testing.T, keys ...string) {
+	t.Helper()
 
-	// Формируем содержимое файла с переменными окружения
-	// Каждая переменная должна быть на отдельной строке в формате KEY=VALUE
-	content := "DATABASE_URL=postgres://test_user:test_password@localhost:6547/contract_test?sslmode=disable\nHTTP_PORT=9090\n"
-	if err := os.WriteFile(envPath, []byte(content), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("Created env file at: %s", envPath) //test logs
+	for _, key := range keys {
+		value, existed := os.LookupEnv(key)
+		if err := os.Unsetenv(key); err != nil {
+			t.Fatalf("unset %s: %v", key, err)
+		}
 
-	// ВАЖНО: очищаем переменные окружения ПЕРЕД загрузкой конфига!
-	// Это гарантирует, что LoadWithEnvFile будет читать ВСЕ значения ТОЛЬКО из файла,
-	// а не из предыдущих тестов или системного окружения.
-	// Используем t.Setenv() которая автоматически восстановит значения после теста.
-	t.Setenv("DATABASE_URL", "")
-	t.Setenv("HTTP_PORT", "")
-
-	// LoadWithEnvFile fills only missing/empty keys (process env wins).
-	// Empty Setenv above lets values from the file apply.
-	cfg, err := LoadWithEnvFile(envPath)
-	if err != nil {
-		t.Fatalf("LoadWithEnvFile: %v", err)
-	}
-	t.Logf("Loaded config successfully: DATABASE_URL=%q, HTTP_PORT=%q", cfg.DatabaseURL, cfg.HTTPPort)
-
-	// === ПРОВЕРКА (Assert) ===
-	// Проверяем что DATABASE_URL был успешно загружен из файла
-	// Важно проверить полный URL с базой данных и параметрами подключения
-	wantURL := "postgres://test_user:test_password@localhost:6547/contract_test?sslmode=disable"
-	if cfg.DatabaseURL != wantURL {
-		t.Fatalf("DatabaseURL = %q, want %q", cfg.DatabaseURL, wantURL)
-	}
-
-	// Проверяем что HTTP_PORT был успешно загружен из файла
-	// и имеет значение 9090, а не значение по умолчанию (8080)
-	if cfg.HTTPPort != "9090" {
-		t.Fatalf("HTTPPort = %q, want 9090", cfg.HTTPPort)
-	}
-}
-
-func TestLoadWithEnvFile_missingDatabaseURL(t *testing.T) {
-	t.Setenv("DATABASE_URL", "")
-	t.Setenv("HTTP_PORT", "8080")
-
-	_, err := LoadWithEnvFile("")
-	if err == nil {
-		t.Fatal("expected error when DATABASE_URL is empty")
-	}
-}
-
-func TestLoadWithEnvFile_processEnvOverridesDotEnv(t *testing.T) {
-	dir := t.TempDir()
-	envPath := filepath.Join(dir, "override.env")
-	if err := os.WriteFile(envPath, []byte("DATABASE_URL=postgres://from-file:test_password@localhost:6547/contract_test?sslmode=disable\nHTTP_PORT=3000\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	// re init env
-	t.Setenv("DATABASE_URL", "postgres://from-process")
-	t.Setenv("HTTP_PORT", "4000")
-
-	cfg, err := LoadWithEnvFile(envPath)
-	if err != nil {
-		t.Fatalf("LoadWithEnvFile: %v", err)
-	}
-	t.Logf("After load susscesfully: DATABASE_URL=%q, HTTP_PORT=%q", cfg.DatabaseURL, cfg.HTTPPort)
-
-	if cfg.DatabaseURL != "postgres://from-process" {
-		t.Fatalf("DatabaseURL = %q, want process env to win", cfg.DatabaseURL)
-	}
-	if cfg.HTTPPort != "4000" {
-		t.Fatalf("HTTPPort = %q, want process env to win", cfg.HTTPPort)
+		restoreKey := key
+		restoreValue := value
+		restoreExisted := existed
+		t.Cleanup(func() {
+			if restoreExisted {
+				_ = os.Setenv(restoreKey, restoreValue)
+				return
+			}
+			_ = os.Unsetenv(restoreKey)
+		})
 	}
 }
