@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,7 +11,7 @@ import (
 
 type BaseCompanyRepository interface {
 	IsCompanyKnownByIDTx(ctx context.Context, tx pgx.Tx, companyID int) error
-	GetAvailableOfferingByCompanyIDTx(ctx context.Context, tx pgx.Tx, companyID int, serviceCode model.ServiceCodeType) (*model.GetAvailableResultResponse, error)
+	GetAvailableOfferingByCompanyIDTx(ctx context.Context, tx pgx.Tx, companyID int, serviceCode domain.ServiceCode) (*domain.AvailabilityEntity, error)
 }
 
 type CompanyRepository struct {

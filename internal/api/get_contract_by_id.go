@@ -1,11 +1,9 @@
-package http
+package api
 
 import (
 	"log/slog"
 	"os"
 	"strconv"
-
-	"job4j/sharetrip-contract/internal/contract/model"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +16,7 @@ func (s *Server) GetContractByID(ctx *fiber.Ctx) error {
 	)
 	logger.Debug("GetContractByID http started")
 
-	var req model.GetContractByIDRequest
+	var req GetContractByIDRequest
 	if err := ctx.ParamsParser(&req); err != nil {
 		logger.Warn("get contract by id failed: invalid path params", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
@@ -30,7 +28,7 @@ func (s *Server) GetContractByID(ctx *fiber.Ctx) error {
 		}
 	}
 
-	resp, err := s.ContractService.GetContractByID(ctx.UserContext(), &req)
+	resp, err := s.ContractService.GetContractByID(ctx.UserContext(), toGetContractByIDInput(&req))
 	if err != nil {
 		logger.Error("get contract by id failed", slog.Any("error", err))
 		return HandleError(ctx, err)

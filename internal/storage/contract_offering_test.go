@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
@@ -50,7 +50,7 @@ func (t offeringFakeTx) CopyFrom(ctx context.Context, tableName pgx.Identifier, 
 	return 0, nil
 }
 func (t offeringFakeTx) SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults { return nil }
-func (t offeringFakeTx) LargeObjects() pgx.LargeObjects                             { return pgx.LargeObjects{} }
+func (t offeringFakeTx) LargeObjects() pgx.LargeObjects                               { return pgx.LargeObjects{} }
 func (t offeringFakeTx) Prepare(ctx context.Context, name, sql string) (*pgconn.StatementDescription, error) {
 	return nil, nil
 }
@@ -81,7 +81,7 @@ func TestExistServiceCodesTx_ReportsMissing(t *testing.T) {
 func TestUpsertContractServiceTx_OK(t *testing.T) {
 	repo := storage.NewContractOfferingRepository(nil)
 	tx := offeringFakeTx{}
-	err := repo.UpsertContractServiceTx(context.Background(), tx, 1, model.ServiceItem{
+	err := repo.UpsertContractServiceTx(context.Background(), tx, 1, domain.ServiceItemEntity{
 		ServiceCode: "trip_creation",
 		IsEnabled:   true,
 	})

@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"os"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 )
 
-func (s *HealthcheckService) GetHealthcheckInfo(ctx context.Context) (*model.GetHealthcheckInfoResponse, error) {
+func (s *HealthcheckService) GetHealthcheckInfo(ctx context.Context) (*domain.HealthcheckOutput, error) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
 		slog.String("service", "HealthcheckService"),
 		slog.String("operation", "GetHealthcheckInfo"),

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
@@ -12,7 +12,7 @@ import (
 
 // Offering — контракт сервисного слоя (методы в отдельных файлах).
 type Offering interface {
-	UpsertContractServices(ctx context.Context, request *model.UpsertContractServicesRequest) (*model.UpsertContractServicesResponse, error)
+	UpsertContractServices(ctx context.Context, input *domain.UpsertContractServicesInput) (*domain.UpsertContractServicesOutput, error)
 }
 
 type OfferingService struct {

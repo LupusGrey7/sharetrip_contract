@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
@@ -17,41 +17,41 @@ func (u *ContractUseCase) CreateContract(
 	ctx context.Context,
 	tx pgx.Tx,
 	repo storage.BaseTxContractRepository,
-	req *model.CreateContractRequest,
-) (*model.Contract, error) {
+	input *domain.CreateContractInput,
+) (*domain.ContractOutput, error) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
 		slog.String("layer", "useCase"),
 		slog.String("useCase", "CreateContract"),
-		slog.Int("company_id", req.CompanyID),
+		slog.Int("company_id", input.CompanyID),
 	)
 	logger.Debug("CreateContract started")
 
-	if req.EndDate.Before(req.StartDate) {
+	if input.EndDate.Before(input.StartDate) {
 		return nil, fmt.Errorf("%w: end_date before start_date", ErrInvalidRequest)
 	}
 
-	status := req.Status
+	status := input.Status
 	if status == "" {
-		status = model.ContractStatusDraft
+		status = domain.ContractStatusDraft
 	}
 
-	number := req.ContractNumber
+	number := input.ContractNumber
 	if number == "" {
-		number = fmt.Sprintf("C-%d-%d", req.CompanyID, time.Now().Unix())
+		number = fmt.Sprintf("C-%d-%d", input.CompanyID, time.Now().Unix())
 	}
 
-	resp, err := repo.CreateContractTx(ctx, tx, &model.Contract{
+	entity, err := repo.CreateContractTx(ctx, tx, &domain.ContractEntity{
 		ContractNumber: number,
-		CompanyID:      req.CompanyID,
+		CompanyID:      input.CompanyID,
 		Status:         status,
-		StartDate:      req.StartDate,
-		EndDate:        req.EndDate,
+		StartDate:      input.StartDate,
+		EndDate:        input.EndDate,
 	})
 	if err != nil {
 		logger.Error("CreateContract failed", slog.Any("error", err))
 		return nil, err
 	}
 
-	logger.Debug("CreateContract completed", slog.Int("contract_id", resp.ID))
-	return resp, nil
+	logger.Debug("CreateContract completed", slog.Int("contract_id", entity.ID))
+	return domain.ContractEntityToOutput(entity), nil
 }

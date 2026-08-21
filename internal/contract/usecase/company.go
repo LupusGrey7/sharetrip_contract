@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
@@ -15,8 +15,8 @@ type BaseCompanyUseCase interface {
 		tx pgx.Tx,
 		offeringRepo storage.BaseTxOfferingRepository,
 		companyRepo storage.BaseCompanyRepository,
-		req *model.GetAvailableOfferingByCompanyIDRequest,
-	) (*model.GetAvailableResultResponse, error)
+		input *domain.GetAvailableOfferingByCompanyIDInput,
+	) (*domain.AvailabilityOutput, error)
 }
 
 type CompanyUseCase struct{}

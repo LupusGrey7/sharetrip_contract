@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"job4j/sharetrip-contract/internal/api"
 	"job4j/sharetrip-contract/internal/app"
 	"job4j/sharetrip-contract/internal/config"
-	httpserver "job4j/sharetrip-contract/internal/http"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/joho/godotenv"
@@ -49,7 +49,7 @@ func main() {
 	fiberApp := app.New(pool)
 	addr := fmt.Sprintf(":%s", config.Env("HTTP_PORT", "8080"))
 
-	httpserver.LogRegisteredRoutes(addr)
+	api.LogRegisteredRoutes(addr)
 
 	log.Printf("listening on %s", addr)
 	if err := fiberApp.Listen(addr); err != nil {

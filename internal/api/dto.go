@@ -1,9 +1,9 @@
-package http
+package api
 
 import "time"
 
-// HTTP DTO = form OpenAPI / JSON on the API boundary.
-// Inside (service/usecase/storage) go types from internal/contract/model — through mapper.
+// HTTP DTO = OpenAPI / JSON / path params on the API boundary.
+// Service/usecase expose Input / Output. Storage entities never reach this package.
 
 type CreateContractRequest struct {
 	CompanyID      int       `json:"company_id" validate:"required,min=1"`
@@ -24,19 +24,24 @@ type ContractResponse struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
-type ServiceItemDTO struct {
+type UpsertServiceItemRequest struct {
 	ServiceCode string `json:"service_code" validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
 	IsEnabled   bool   `json:"is_enabled"`
 }
 
 type UpsertServicesRequest struct {
-	ContractID int              `json:"contract_id" validate:"required,min=1"`
-	Services   []ServiceItemDTO `json:"services" validate:"required,min=1,dive"`
+	ContractID int                        `json:"contract_id" validate:"required,min=1"`
+	Services   []UpsertServiceItemRequest `json:"services" validate:"required,min=1,dive"`
+}
+
+type UpsertServiceItemResponse struct {
+	ServiceCode string `json:"service_code"`
+	IsEnabled   bool   `json:"is_enabled"`
 }
 
 type UpsertServicesResponse struct {
-	ContractID int              `json:"contract_id"`
-	Services   []ServiceItemDTO `json:"services"`
+	ContractID int                         `json:"contract_id"`
+	Services   []UpsertServiceItemResponse `json:"services"`
 }
 
 type HealthcheckResponse struct {
@@ -55,4 +60,15 @@ type AvailabilityResult struct {
 	ServiceCode string `json:"service_code"`
 	Allowed     bool   `json:"allowed"`
 	Reason      string `json:"reason,omitempty"`
+}
+
+// GetAvailableOfferingByCompanyIDRequest — Fiber ParamsParser (path).
+type GetAvailableOfferingByCompanyIDRequest struct {
+	CompanyID   int    `params:"companyId" validate:"required,min=1"`
+	ServiceCode string `params:"serviceCode" validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
+}
+
+// GetContractByIDRequest — Fiber ParamsParser (path).
+type GetContractByIDRequest struct {
+	ContractID int `params:"contractId" validate:"required,min=1"`
 }

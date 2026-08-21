@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
@@ -21,7 +21,7 @@ func (s stubOfferingDictRepo) ExistServiceCodesTx(ctx context.Context, tx pgx.Tx
 	return s.missing, s.err
 }
 
-func (s stubOfferingDictRepo) GetOfferingByCodeTx(ctx context.Context, tx pgx.Tx, code string) (*model.Offering, error) {
+func (s stubOfferingDictRepo) GetOfferingByCodeTx(ctx context.Context, tx pgx.Tx, code string) (*domain.OfferingEntity, error) {
 	return nil, storage.ErrOfferingNotFound
 }
 
@@ -36,11 +36,11 @@ func (s stubOfferingDictRepo) IsOfferingExistsByCodeTx(ctx context.Context, tx p
 }
 
 type stubLinkRepo struct {
-	items []model.ServiceItem
+	items []domain.ServiceItemEntity
 	err   error
 }
 
-func (s *stubLinkRepo) UpsertContractServiceTx(ctx context.Context, tx pgx.Tx, contractID int, item model.ServiceItem) error {
+func (s *stubLinkRepo) UpsertContractServiceTx(ctx context.Context, tx pgx.Tx, contractID int, item domain.ServiceItemEntity) error {
 	if s.err != nil {
 		return s.err
 	}
@@ -54,14 +54,14 @@ func (s *stubLinkRepo) UpsertContractServiceTx(ctx context.Context, tx pgx.Tx, c
 	return nil
 }
 
-func (s *stubLinkRepo) ListContractServicesTx(ctx context.Context, tx pgx.Tx, contractID int) ([]model.ServiceItem, error) {
+func (s *stubLinkRepo) ListContractServicesTx(ctx context.Context, tx pgx.Tx, contractID int) ([]domain.ServiceItemEntity, error) {
 	return s.items, s.err
 }
 
 func TestUpsertContractServices_OK(t *testing.T) {
 	uc := usecase.NewOfferingUseCase()
 	link := &stubLinkRepo{}
-	contract := stubContractRepo{contract: &model.Contract{ID: 7}}
+	contract := stubContractRepo{contract: &domain.ContractEntity{ID: 7}}
 
 	resp, err := uc.UpsertContractServices(
 		context.Background(),
@@ -69,9 +69,9 @@ func TestUpsertContractServices_OK(t *testing.T) {
 		contract,
 		stubOfferingDictRepo{},
 		link,
-		&model.UpsertContractServicesRequest{
+		&domain.UpsertContractServicesInput{
 			ContractID: 7,
-			Services: []model.ServiceItem{
+			Services: []domain.ServiceItemInput{
 				{ServiceCode: "trip_creation", IsEnabled: true},
 			},
 		},
@@ -95,9 +95,9 @@ func TestUpsertContractServices_ContractNotFound(t *testing.T) {
 		stubContractRepo{err: storage.ErrContractNotFound},
 		stubOfferingDictRepo{},
 		&stubLinkRepo{},
-		&model.UpsertContractServicesRequest{
+		&domain.UpsertContractServicesInput{
 			ContractID: 1,
-			Services:   []model.ServiceItem{{ServiceCode: "trip_creation", IsEnabled: true}},
+			Services:   []domain.ServiceItemInput{{ServiceCode: "trip_creation", IsEnabled: true}},
 		},
 	)
 	if !errors.Is(err, usecase.ErrContractNotFound) {
@@ -110,12 +110,12 @@ func TestUpsertContractServices_ServiceNotFound(t *testing.T) {
 	_, err := uc.UpsertContractServices(
 		context.Background(),
 		nil,
-		stubContractRepo{contract: &model.Contract{ID: 1}},
+		stubContractRepo{contract: &domain.ContractEntity{ID: 1}},
 		stubOfferingDictRepo{missing: []string{"trip_creation"}},
 		&stubLinkRepo{},
-		&model.UpsertContractServicesRequest{
+		&domain.UpsertContractServicesInput{
 			ContractID: 1,
-			Services:   []model.ServiceItem{{ServiceCode: "trip_creation", IsEnabled: true}},
+			Services:   []domain.ServiceItemInput{{ServiceCode: "trip_creation", IsEnabled: true}},
 		},
 	)
 	if !errors.Is(err, usecase.ErrServiceNotFound) {

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
@@ -12,8 +12,8 @@ import (
 
 // Contract — контракт сервисного слоя (методы в отдельных файлах).
 type Contract interface {
-	GetContractByID(ctx context.Context, request *model.GetContractByIDRequest) (*model.ContractResponse, error)
-	CreateContract(ctx context.Context, request *model.CreateContractRequest) (*model.ContractResponse, error)
+	GetContractByID(ctx context.Context, input *domain.GetContractByIDInput) (*domain.ContractOutput, error)
+	CreateContract(ctx context.Context, input *domain.CreateContractInput) (*domain.ContractOutput, error)
 }
 
 type ContractService struct {

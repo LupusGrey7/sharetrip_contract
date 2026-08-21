@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
@@ -23,16 +23,16 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 	tx pgx.Tx,
 	offeringRepo storage.BaseTxOfferingRepository,
 	companyRepo storage.BaseCompanyRepository,
-	req *model.GetAvailableOfferingByCompanyIDRequest,
-) (*model.GetAvailableResultResponse, error) {
+	input *domain.GetAvailableOfferingByCompanyIDInput,
+) (*domain.AvailabilityOutput, error) {
 	log := slog.With(
-		slog.String("company_id", strconv.Itoa(req.CompanyID)),
-		slog.String("service_code", string(req.ServiceCode)),
+		slog.String("company_id", strconv.Itoa(input.CompanyID)),
+		slog.String("service_code", string(input.ServiceCode)),
 	)
 	log.Debug("get available offering by company id started")
 
 	// 1)check: company exists = at least one contract with this company_id
-	if err := companyRepo.IsCompanyKnownByIDTx(ctx, tx, req.CompanyID); err != nil {
+	if err := companyRepo.IsCompanyKnownByIDTx(ctx, tx, input.CompanyID); err != nil {
 		if errors.Is(err, storage.ErrCompanyNotFound) {
 			return nil, ErrCompanyNotFound
 		}
@@ -40,7 +40,7 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 	}
 
 	// 2)check: service exists in the dictionary
-	if err := offeringRepo.IsOfferingExistsByCodeTx(ctx, tx, string(req.ServiceCode)); err != nil {
+	if err := offeringRepo.IsOfferingExistsByCodeTx(ctx, tx, string(input.ServiceCode)); err != nil {
 		if errors.Is(err, storage.ErrOfferingNotFound) {
 			return nil, ErrServiceNotFound
 		}
@@ -48,11 +48,11 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 	}
 
 	// 3)final check: active + contract_services
-	resp, err := companyRepo.GetAvailableOfferingByCompanyIDTx(ctx, tx, req.CompanyID, req.ServiceCode)
+	entity, err := companyRepo.GetAvailableOfferingByCompanyIDTx(ctx, tx, input.CompanyID, input.ServiceCode)
 	if err != nil {
 		return nil, fmt.Errorf("GetAvailableOfferingByCompanyIDTx: %w", err)
 	}
 
-	log.Debug("get available offering by company id completed", slog.Bool("allowed", resp.Allowed))
-	return resp, nil
+	log.Debug("get available offering by company id completed", slog.Bool("allowed", entity.Allowed))
+	return domain.AvailabilityEntityToOutput(entity), nil
 }

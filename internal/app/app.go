@@ -1,9 +1,9 @@
 package app
 
 import (
+	api "job4j/sharetrip-contract/internal/api"
 	"job4j/sharetrip-contract/internal/contract/service"
 	"job4j/sharetrip-contract/internal/contract/usecase"
-	httpserver "job4j/sharetrip-contract/internal/http"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/go-playground/validator/v10"
@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// New is the composition root: repo -> usecase -> service -> http.Server -> Fiber.
+// New is the composition root: repo -> usecase -> service -> api.Server -> Fiber.
 func New(pool *pgxpool.Pool) *fiber.App {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
@@ -32,7 +32,7 @@ func New(pool *pgxpool.Pool) *fiber.App {
 	companyUC := usecase.NewCompanyUseCase()
 	companySvc := service.NewCompanyService(pool, offeringRepo, companyRepo, companyUC)
 
-	httpSrv := httpserver.NewServer(validate, healthcheckService, contractSvc, offeringSvc, companySvc)
+	httpSrv := api.NewServer(validate, healthcheckService, contractSvc, offeringSvc, companySvc)
 	fiberApp := fiber.New()
 	httpSrv.SetupRoutes(fiberApp)
 	return fiberApp

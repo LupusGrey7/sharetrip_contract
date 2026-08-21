@@ -3,35 +3,34 @@ package service
 import (
 	"context"
 	"fmt"
-
-	"job4j/sharetrip-contract/internal/contract/model"
-
 	"log/slog"
 	"os"
+
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 )
 
 func (s *OfferingService) UpsertContractServices(
 	ctx context.Context,
-	request *model.UpsertContractServicesRequest,
-) (*model.UpsertContractServicesResponse, error) {
+	input *domain.UpsertContractServicesInput,
+) (*domain.UpsertContractServicesOutput, error) {
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
 		slog.String("service", "OfferingService"),
 		slog.String("operation", "UpsertContractServices"),
-		slog.Int("contract_id", request.ContractID),
+		slog.Int("contract_id", input.ContractID),
 	)
 	logger.Debug("upsert contract services started")
 
-	res, err := tx(ctx, s.pool, func(pgTx pgx.Tx) (*model.UpsertContractServicesResponse, error) {
+	res, err := tx(ctx, s.pool, func(pgTx pgx.Tx) (*domain.UpsertContractServicesOutput, error) {
 		return s.useCase.UpsertContractServices(
 			ctx,
 			pgTx,
 			s.contractRepo,
 			s.offeringRepo,
 			s.linkRepo,
-			request,
+			input,
 		)
 	})
 	if err != nil {

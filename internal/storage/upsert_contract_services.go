@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -29,7 +29,7 @@ func (r *ContractOfferingRepository) UpsertContractServiceTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	contractID int,
-	item model.ServiceItem,
+	item domain.ServiceItemEntity,
 ) error {
 	_, err := tx.Exec(ctx, upsertContractService, contractID, item.ServiceCode, item.IsEnabled)
 	if err != nil {
@@ -42,16 +42,16 @@ func (r *ContractOfferingRepository) ListContractServicesTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	contractID int,
-) ([]model.ServiceItem, error) {
+) ([]domain.ServiceItemEntity, error) {
 	rows, err := tx.Query(ctx, listContractServices, contractID)
 	if err != nil {
 		return nil, fmt.Errorf("ListContractServicesTx: %w", err)
 	}
 	defer rows.Close()
 
-	var items []model.ServiceItem
+	var items []domain.ServiceItemEntity
 	for rows.Next() {
-		var item model.ServiceItem
+		var item domain.ServiceItemEntity
 		if err := rows.Scan(&item.ServiceCode, &item.IsEnabled); err != nil {
 			return nil, fmt.Errorf("ListContractServicesTx scan: %w", err)
 		}
@@ -61,7 +61,7 @@ func (r *ContractOfferingRepository) ListContractServicesTx(
 		return nil, err
 	}
 	if items == nil {
-		items = []model.ServiceItem{}
+		items = []domain.ServiceItemEntity{}
 	}
 	return items, nil
 }

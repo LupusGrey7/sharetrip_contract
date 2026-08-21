@@ -1,11 +1,9 @@
-package http
+package api
 
 import (
 	"log/slog"
 	"os"
 	"strconv"
-
-	"job4j/sharetrip-contract/internal/contract/model"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,7 +17,7 @@ func (s *Server) GetAvailableOfferingByCompanyID(ctx *fiber.Ctx) error {
 	)
 	logger.Debug("GetAvailableOfferingByCompanyID http started")
 
-	var req model.GetAvailableOfferingByCompanyIDRequest
+	var req GetAvailableOfferingByCompanyIDRequest
 	if err := ctx.ParamsParser(&req); err != nil {
 		logger.Warn("invalid path params", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
@@ -32,7 +30,7 @@ func (s *Server) GetAvailableOfferingByCompanyID(ctx *fiber.Ctx) error {
 		}
 	}
 
-	resp, err := s.CompanyService.GetAvailableOfferingByCompanyID(ctx.UserContext(), &req)
+	resp, err := s.CompanyService.GetAvailableOfferingByCompanyID(ctx.UserContext(), toAvailabilityInput(&req))
 	if err != nil {
 		logger.Error("GetAvailableOfferingByCompanyID failed", slog.Any("error", err))
 		return HandleError(ctx, err)

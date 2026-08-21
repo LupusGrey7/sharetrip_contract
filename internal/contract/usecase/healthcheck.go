@@ -3,12 +3,12 @@ package usecase
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 )
 
 type BaseHealthcheckUseCase interface {
-	GetHealthcheckInfo(ctx context.Context) (*model.GetHealthcheckInfoResponse, error)
+	GetHealthcheckInfo(ctx context.Context) (*domain.HealthcheckOutput, error)
 }
 
 type HealthcheckUseCase struct {

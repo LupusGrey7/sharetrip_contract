@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
@@ -12,7 +12,7 @@ import (
 
 // Company — сценарии availability по компании (методы — в отдельных файлах).
 type Company interface {
-	GetAvailableOfferingByCompanyID(ctx context.Context, req *model.GetAvailableOfferingByCompanyIDRequest) (*model.GetAvailableResultResponse, error)
+	GetAvailableOfferingByCompanyID(ctx context.Context, input *domain.GetAvailableOfferingByCompanyIDInput) (*domain.AvailabilityOutput, error)
 }
 
 type CompanyService struct {

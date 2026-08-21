@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -25,7 +25,7 @@ func (r *ContractRepository) GetContractByIDTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	id int,
-) (*model.Contract, error) {
+) (*domain.ContractEntity, error) {
 	return r.scanContract(ctx, tx, getContractByID, id)
 }
 
@@ -33,7 +33,7 @@ func (r *ContractRepository) GetContractByIDForUpdateTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	id int,
-) (*model.Contract, error) {
+) (*domain.ContractEntity, error) {
 	return r.scanContract(ctx, tx, getContractByIDForUpdate, id)
 }
 
@@ -42,7 +42,7 @@ func (r *ContractRepository) scanContract(
 	tx pgx.Tx,
 	query string,
 	id int,
-) (*model.Contract, error) {
+) (*domain.ContractEntity, error) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
 		slog.String("layer", "repository"),
 		slog.String("repository", "ContractRepository"),
@@ -60,8 +60,8 @@ func (r *ContractRepository) scanContract(
 	return contract, nil
 }
 
-func scanContractRow(row pgx.Row) (*model.Contract, error) {
-	var c model.Contract
+func scanContractRow(row pgx.Row) (*domain.ContractEntity, error) {
+	var c domain.ContractEntity
 	var status string
 	err := row.Scan(
 		&c.ID,
@@ -76,6 +76,6 @@ func scanContractRow(row pgx.Row) (*model.Contract, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.Status = model.ContractStatus(status)
+	c.Status = domain.ContractStatus(status)
 	return &c, nil
 }

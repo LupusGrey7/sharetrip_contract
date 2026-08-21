@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -61,8 +61,8 @@ func (r *OfferingRepository) GetOfferingByCodeTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	code string,
-) (*model.Offering, error) {
-	var o model.Offering
+) (*domain.OfferingEntity, error) {
+	var o domain.OfferingEntity
 	err := tx.QueryRow(ctx, getOfferingByCode, code).Scan(
 		&o.ServiceCode,
 		&o.Description,

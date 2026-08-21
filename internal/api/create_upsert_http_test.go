@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"bytes"
@@ -9,33 +9,33 @@ import (
 	"testing"
 	"time"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type stubContractService struct {
-	createResp *model.ContractResponse
+	createResp *domain.ContractOutput
 	createErr  error
-	getResp    *model.ContractResponse
+	getResp    *domain.ContractOutput
 	getErr     error
 }
 
-func (s stubContractService) CreateContract(ctx context.Context, request *model.CreateContractRequest) (*model.ContractResponse, error) {
+func (s stubContractService) CreateContract(ctx context.Context, input *domain.CreateContractInput) (*domain.ContractOutput, error) {
 	return s.createResp, s.createErr
 }
 
-func (s stubContractService) GetContractByID(ctx context.Context, request *model.GetContractByIDRequest) (*model.ContractResponse, error) {
+func (s stubContractService) GetContractByID(ctx context.Context, input *domain.GetContractByIDInput) (*domain.ContractOutput, error) {
 	return s.getResp, s.getErr
 }
 
 type stubOfferingService struct {
-	resp *model.UpsertContractServicesResponse
+	resp *domain.UpsertContractServicesOutput
 	err  error
 }
 
-func (s stubOfferingService) UpsertContractServices(ctx context.Context, request *model.UpsertContractServicesRequest) (*model.UpsertContractServicesResponse, error) {
+func (s stubOfferingService) UpsertContractServices(ctx context.Context, input *domain.UpsertContractServicesInput) (*domain.UpsertContractServicesOutput, error) {
 	return s.resp, s.err
 }
 
@@ -50,8 +50,8 @@ func TestCreateContract_HTTP_201(t *testing.T) {
 	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	srv := &Server{
 		ContractService: stubContractService{
-			createResp: &model.ContractResponse{
-				ID: 5, ContractNumber: "C-1", CompanyID: 10, Status: model.ContractStatusDraft,
+			createResp: &domain.ContractOutput{
+				ID: 5, ContractNumber: "C-1", CompanyID: 10, Status: domain.ContractStatusDraft,
 				StartDate: now, EndDate: now.AddDate(1, 0, 0), CreatedAt: now, UpdatedAt: now,
 			},
 		},
@@ -82,9 +82,9 @@ func TestUpsertContractServices_HTTP_200(t *testing.T) {
 	srv := &Server{
 		ContractService: stubContractService{},
 		OfferingService: stubOfferingService{
-			resp: &model.UpsertContractServicesResponse{
+			resp: &domain.UpsertContractServicesOutput{
 				ContractID: 5,
-				Services:   []model.ServiceItem{{ServiceCode: "trip_creation", IsEnabled: true}},
+				Services:   []domain.ServiceItemOutput{{ServiceCode: "trip_creation", IsEnabled: true}},
 			},
 		},
 	}

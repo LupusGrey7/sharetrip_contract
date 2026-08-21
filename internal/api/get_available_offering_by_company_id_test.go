@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"context"
@@ -7,33 +7,31 @@ import (
 	"net/http"
 	"testing"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 
 	"github.com/go-playground/validator/v10"
 )
 
-// stubCompanyService is a stub implementation of the CompanyService interface.
 type stubCompanyService struct {
-	resp *model.GetAvailableResultResponse
+	resp *domain.AvailabilityOutput
 	err  error
-	got  *model.GetAvailableOfferingByCompanyIDRequest
+	got  *domain.GetAvailableOfferingByCompanyIDInput
 }
 
-// GetAvailableOfferingByCompanyID is a stub implementation of the GetAvailableOfferingByCompanyID method.
 func (s *stubCompanyService) GetAvailableOfferingByCompanyID(
 	ctx context.Context,
-	req *model.GetAvailableOfferingByCompanyIDRequest,
-) (*model.GetAvailableResultResponse, error) {
-	s.got = req
+	input *domain.GetAvailableOfferingByCompanyIDInput,
+) (*domain.AvailabilityOutput, error) {
+	s.got = input
 	return s.resp, s.err
 }
 
 func TestGetAvailableOfferingByCompanyID_HTTP_200_Allowed(t *testing.T) {
 	company := &stubCompanyService{
-		resp: &model.GetAvailableResultResponse{
+		resp: &domain.AvailabilityOutput{
 			CompanyID:   42,
-			ServiceCode: model.ServiceCodeTripCreation,
+			ServiceCode: domain.ServiceCodeTripCreation,
 			Allowed:     true,
 		},
 	}
@@ -71,8 +69,8 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Allowed(t *testing.T) {
 	if got.CompanyID != 42 || got.ServiceCode != "trip_creation" || !got.Allowed {
 		t.Fatalf("unexpected: %+v", got)
 	}
-	if company.got == nil || company.got.CompanyID != 42 || company.got.ServiceCode != model.ServiceCodeTripCreation {
-		t.Fatalf("service got request: %+v", company.got)
+	if company.got == nil || company.got.CompanyID != 42 || company.got.ServiceCode != domain.ServiceCodeTripCreation {
+		t.Fatalf("service got input: %+v", company.got)
 	}
 }
 
@@ -81,9 +79,9 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Denied(t *testing.T) {
 		ContractService: stubContractService{},
 		OfferingService: stubOfferingService{},
 		CompanyService: &stubCompanyService{
-			resp: &model.GetAvailableResultResponse{
+			resp: &domain.AvailabilityOutput{
 				CompanyID:   42,
-				ServiceCode: model.ServiceCodeTripCreation,
+				ServiceCode: domain.ServiceCodeTripCreation,
 				Allowed:     false,
 				Reason:      "no active contract with this service",
 			},

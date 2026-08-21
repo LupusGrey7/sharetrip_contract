@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -29,8 +29,8 @@ func (r *CompanyRepository) GetAvailableOfferingByCompanyIDTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	companyID int,
-	serviceCode model.ServiceCodeType,
-) (*model.GetAvailableResultResponse, error) {
+	serviceCode domain.ServiceCode,
+) (*domain.AvailabilityEntity, error) {
 	log := slog.With(
 		slog.String("company_id", strconv.Itoa(companyID)),
 		slog.String("service_code", string(serviceCode)),
@@ -42,7 +42,7 @@ func (r *CompanyRepository) GetAvailableOfferingByCompanyIDTx(
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			// Компания и код уже проверены выше по flow — здесь нет активной связки.
-			return &model.GetAvailableResultResponse{
+			return &domain.AvailabilityEntity{
 				CompanyID:   companyID,
 				ServiceCode: serviceCode,
 				Allowed:     false,
@@ -52,7 +52,7 @@ func (r *CompanyRepository) GetAvailableOfferingByCompanyIDTx(
 		return nil, fmt.Errorf("GetAvailableOfferingByCompanyIDTx: %w", err)
 	}
 
-	resp := &model.GetAvailableResultResponse{
+	resp := &domain.AvailabilityEntity{
 		CompanyID:   companyID,
 		ServiceCode: serviceCode,
 		Allowed:     enabled,

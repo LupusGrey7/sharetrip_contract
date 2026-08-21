@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
@@ -16,8 +16,8 @@ type BaseOfferingUseCase interface {
 		contractRepo storage.BaseTxContractRepository,
 		offeringRepo storage.BaseTxOfferingRepository,
 		linkRepo storage.BaseTxContractOfferingRepository,
-		request *model.UpsertContractServicesRequest,
-	) (*model.UpsertContractServicesResponse, error)
+		input *domain.UpsertContractServicesInput,
+	) (*domain.UpsertContractServicesOutput, error)
 }
 
 type OfferingUseCase struct{}

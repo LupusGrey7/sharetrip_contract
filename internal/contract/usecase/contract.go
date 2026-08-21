@@ -3,15 +3,15 @@ package usecase
 import (
 	"context"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
 )
 
 type BaseContractUseCase interface {
-	GetContractByID(ctx context.Context, tx pgx.Tx, repo storage.BaseTxContractRepository, request *model.GetContractByIDRequest) (*model.Contract, error)
-	CreateContract(ctx context.Context, tx pgx.Tx, repo storage.BaseTxContractRepository, request *model.CreateContractRequest) (*model.Contract, error)
+	GetContractByID(ctx context.Context, tx pgx.Tx, repo storage.BaseTxContractRepository, input *domain.GetContractByIDInput) (*domain.ContractOutput, error)
+	CreateContract(ctx context.Context, tx pgx.Tx, repo storage.BaseTxContractRepository, input *domain.CreateContractInput) (*domain.ContractOutput, error)
 }
 
 type ContractUseCase struct{}

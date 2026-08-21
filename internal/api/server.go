@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"job4j/sharetrip-contract/internal/contract/service"
@@ -6,8 +6,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Server — HTTP-адаптер (как internal/api.Server в прошлых проектах лида).
-// Routes и handler-методы живут в этом же пакете http.
+// Server — HTTP-адаптер (пакет internal/api, как у лида).
+// Routes и handler-методы живут в этом же пакете.
 // Сервисы — через interface, чтобы handler-тесты могли подставлять stub.
 type Server struct {
 	Validator          *validator.Validate

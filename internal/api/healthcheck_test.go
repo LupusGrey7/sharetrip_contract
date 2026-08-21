@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"context"
@@ -8,20 +8,18 @@ import (
 	"net/http"
 	"testing"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// stubInfoUseCase is a stub implementation of the InfoUseCase interface.
 type stubInfoUseCase struct {
-	resp *model.GetHealthcheckInfoResponse
+	resp *domain.HealthcheckOutput
 	err  error
 }
 
-// GetHealthcheckInfo is a stub implementation of the GetHealthcheckInfo method.
-func (s stubInfoUseCase) GetHealthcheckInfo(ctx context.Context) (*model.GetHealthcheckInfoResponse, error) {
+func (s stubInfoUseCase) GetHealthcheckInfo(ctx context.Context) (*domain.HealthcheckOutput, error) {
 	return s.resp, s.err
 }
 
@@ -36,7 +34,7 @@ func newTestApp(t *testing.T, uc stubInfoUseCase) *fiber.App {
 
 func TestHealthcheck_OK(t *testing.T) {
 	fiberApp := newTestApp(t, stubInfoUseCase{
-		resp: &model.GetHealthcheckInfoResponse{Status: "ok", Message: "application and database are healthy"},
+		resp: &domain.HealthcheckOutput{Status: "ok", Message: "application and database are healthy"},
 	})
 
 	req, err := http.NewRequest(http.MethodGet, "/healthcheck", nil)

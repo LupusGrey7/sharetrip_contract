@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"job4j/sharetrip-contract/internal/contract/model"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -20,23 +20,23 @@ RETURNING id, contract_number, company_id, status_id, start_date, end_date, crea
 func (r *ContractRepository) CreateContractTx(
 	ctx context.Context,
 	tx pgx.Tx,
-	contract *model.Contract,
-) (*model.Contract, error) {
+	entity *domain.ContractEntity,
+) (*domain.ContractEntity, error) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
 		slog.String("layer", "repository"),
 		slog.String("repository", "CreateContractTx"),
-		slog.Int("company_id", contract.CompanyID),
+		slog.Int("company_id", entity.CompanyID),
 	)
 	logger.Debug("CreateContractTx started")
 
 	created, err := scanContractRow(tx.QueryRow(
 		ctx,
 		createContract,
-		contract.ContractNumber,
-		contract.CompanyID,
-		string(contract.Status),
-		contract.StartDate,
-		contract.EndDate,
+		entity.ContractNumber,
+		entity.CompanyID,
+		string(entity.Status),
+		entity.StartDate,
+		entity.EndDate,
 	))
 	if err != nil {
 		logger.Error("CreateContractTx failed", slog.Any("error", err))
