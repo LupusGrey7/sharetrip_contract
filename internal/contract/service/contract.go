@@ -13,6 +13,7 @@ import (
 // Contract — контракт сервисного слоя (методы в отдельных файлах).
 type Contract interface {
 	GetContractByID(ctx context.Context, input *domain.GetContractByIDInput) (*domain.ContractOutput, error)
+	GetActiveContractByCompanyID(ctx context.Context, input *domain.GetActiveContractByCompanyIDInput) (*domain.ContractOutput, error)
 	CreateContract(ctx context.Context, input *domain.CreateContractInput) (*domain.ContractOutput, error)
 }
 

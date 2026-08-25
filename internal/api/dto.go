@@ -72,3 +72,8 @@ type GetAvailableOfferingByCompanyIDRequest struct {
 type GetContractByIDRequest struct {
 	ContractID int `params:"contractId" validate:"required,min=1"`
 }
+
+// GetActiveContractByCompanyIDRequest — Fiber QueryParser (OpenAPI query companyId).
+type GetActiveContractByCompanyIDRequest struct {
+	CompanyID int `query:"companyId" validate:"required,min=1"`
+}

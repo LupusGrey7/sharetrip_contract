@@ -51,6 +51,11 @@ type GetContractByIDInput struct {
 	ContractID int
 }
 
+// GetActiveContractByCompanyIDInput — OpenAPI getActiveContractByCompanyId (query companyId).
+type GetActiveContractByCompanyIDInput struct {
+	CompanyID int
+}
+
 // ChangeContractStatusInput — input for service/usecase.
 type ChangeContractStatusInput struct {
 	ContractID int

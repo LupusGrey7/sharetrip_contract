@@ -1,3 +1,7 @@
+// Package apitest is a separate Go package on purpose.
+// Moving this file into internal/api (package api) would import application.New,
+// and app already imports api — that is an import cycle.
+// Keep the file here until we extract a cycle-free test helper.
 package apitest
 
 import (
@@ -113,6 +117,21 @@ func TestAPIWithPostgres(t *testing.T) {
 		closeBody(t, getResp)
 		if found.ID != created.ID || found.ContractNumber != created.ContractNumber {
 			t.Fatalf("unexpected fetched contract: %+v", found)
+		}
+
+		activeResp := sendRequest(
+			t,
+			fiberApp,
+			http.MethodGet,
+			fmt.Sprintf("/api/v2/contracts/active?companyId=%d", companyID),
+			nil,
+		)
+		requireStatus(t, activeResp, http.StatusOK)
+		var active api.ContractResponse
+		decodeResponse(t, activeResp, &active)
+		closeBody(t, activeResp)
+		if active.ID != created.ID || active.Status != "active" || active.CompanyID != companyID {
+			t.Fatalf("unexpected active contract: %+v", active)
 		}
 
 		upsertBody := fmt.Appendf(nil, `{

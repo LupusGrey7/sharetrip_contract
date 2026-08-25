@@ -22,6 +22,13 @@ func toGetContractByIDInput(r *GetContractByIDRequest) *domain.GetContractByIDIn
 	return &domain.GetContractByIDInput{ContractID: r.ContractID}
 }
 
+func toGetActiveContractByCompanyIDInput(r *GetActiveContractByCompanyIDRequest) *domain.GetActiveContractByCompanyIDInput {
+	if r == nil {
+		return nil
+	}
+	return &domain.GetActiveContractByCompanyIDInput{CompanyID: r.CompanyID}
+}
+
 func toContractResponse(output *domain.ContractOutput) *ContractResponse {
 	if output == nil {
 		return nil

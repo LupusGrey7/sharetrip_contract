@@ -12,6 +12,7 @@ import (
 type BaseTxContractRepository interface {
 	GetContractByIDTx(ctx context.Context, tx pgx.Tx, id int) (*domain.ContractEntity, error)
 	GetContractByIDForUpdateTx(ctx context.Context, tx pgx.Tx, id int) (*domain.ContractEntity, error)
+	GetActiveContractByCompanyIDTx(ctx context.Context, tx pgx.Tx, companyID int) (*domain.ContractEntity, error)
 	CreateContractTx(ctx context.Context, tx pgx.Tx, entity *domain.ContractEntity) (*domain.ContractEntity, error)
 }
 

@@ -49,6 +49,18 @@ func (s *stubContractUseCase) GetContractByID(
 	return s.output, nil
 }
 
+func (s *stubContractUseCase) GetActiveContractByCompanyID(
+	ctx context.Context,
+	tx pgx.Tx,
+	repo storage.BaseTxContractRepository,
+	input *domain.GetActiveContractByCompanyIDInput,
+) (*domain.ContractOutput, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.output, nil
+}
+
 func TestContractService_CreateContract_OK(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.AddDate(0, 1, 0)

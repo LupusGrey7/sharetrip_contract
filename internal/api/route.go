@@ -16,6 +16,7 @@ const (
 	OpenAPISpecPath = "/openapi.yaml"
 
 	contractGetByIdPath            = "/:contractId"
+	contractGetActivePath          = "/active"
 	companyServiceAvailabilityPath = "/:companyId/services/:serviceCode/availability"
 )
 
@@ -32,6 +33,7 @@ func RegisteredRoutes() []RouteInfo {
 		{Method: "GET", Path: HealthcheckPath, Note: "liveness / DB ping"},
 		{Method: "GET", Path: GroupPrefixV2 + OpenAPISpecPath, Note: "OpenAPI yaml (import in Swagger Editor)"},
 		{Method: "POST", Path: GroupPrefixV2 + ContractPath + "/", Note: "create contract"},
+		{Method: "GET", Path: GroupPrefixV2 + ContractPath + "/active", Note: "get active contract by companyId query"},
 		{Method: "GET", Path: GroupPrefixV2 + ContractPath + "/{contractId}", Note: "get contract by id"},
 		{Method: "PUT", Path: GroupPrefixV2 + ServicesPath, Note: "upsert contract services (e.g. trip_creation)"},
 		{Method: "GET", Path: GroupPrefixV2 + CompaniesPath + "/{companyId}/services/{serviceCode}/availability", Note: "check service availability for company"},
@@ -61,6 +63,8 @@ func (s *Server) SetupRoutes(app *fiber.App) {
 
 	contracts := v2.Group(ContractPath)
 	contracts.Post("/", s.CreateContract)
+	// /active must be registered before /:contractId, otherwise Fiber treats "active" as an id.
+	contracts.Get(contractGetActivePath, s.GetActiveContractByCompanyID)
 	contracts.Get(contractGetByIdPath, s.GetContractByID)
 
 	companies := v2.Group(CompaniesPath)

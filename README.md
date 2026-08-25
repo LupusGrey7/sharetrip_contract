@@ -214,8 +214,9 @@ after migrate → run app
 POST /api/v2/contracts/
 PUT  /api/v2/services   (trip_creation, is_enabled: true)
 GET  /api/v2/contracts/{id}
+GET  /api/v2/contracts/active?companyId={companyId}
 GET  /healthcheck
-``
+```
 
 ## Технологический стек
 

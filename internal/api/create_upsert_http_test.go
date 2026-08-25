@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"testing"
-	"time"
 
 	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
@@ -20,6 +19,8 @@ type stubContractService struct {
 	createErr  error
 	getResp    *domain.ContractOutput
 	getErr     error
+	activeResp *domain.ContractOutput
+	activeErr  error
 }
 
 func (s stubContractService) CreateContract(ctx context.Context, input *domain.CreateContractInput) (*domain.ContractOutput, error) {
@@ -28,6 +29,13 @@ func (s stubContractService) CreateContract(ctx context.Context, input *domain.C
 
 func (s stubContractService) GetContractByID(ctx context.Context, input *domain.GetContractByIDInput) (*domain.ContractOutput, error) {
 	return s.getResp, s.getErr
+}
+
+func (s stubContractService) GetActiveContractByCompanyID(
+	ctx context.Context,
+	input *domain.GetActiveContractByCompanyIDInput,
+) (*domain.ContractOutput, error) {
+	return s.activeResp, s.activeErr
 }
 
 type stubOfferingService struct {
@@ -44,38 +52,6 @@ func newRoutesApp(t *testing.T, srv *Server) *fiber.App {
 	app := fiber.New()
 	srv.SetupRoutes(app)
 	return app
-}
-
-func TestCreateContract_HTTP_201(t *testing.T) {
-	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	srv := &Server{
-		ContractService: stubContractService{
-			createResp: &domain.ContractOutput{
-				ID: 5, ContractNumber: "C-1", CompanyID: 10, Status: domain.ContractStatusDraft,
-				StartDate: now, EndDate: now.AddDate(1, 0, 0), CreatedAt: now, UpdatedAt: now,
-			},
-		},
-		OfferingService: stubOfferingService{},
-	}
-	app := newRoutesApp(t, srv)
-
-	body := []byte(`{"company_id":10,"start_date":"2026-01-01T00:00:00Z","end_date":"2027-01-01T00:00:00Z"}`)
-	req, _ := http.NewRequest(http.MethodPost, "/api/v2/contracts/", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := app.Test(req, -1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	if resp.StatusCode != http.StatusCreated {
-		b, _ := io.ReadAll(resp.Body)
-		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
-	}
 }
 
 func TestUpsertContractServices_HTTP_200(t *testing.T) {

@@ -29,6 +29,17 @@ func (s stubContractRepo) GetContractByIDForUpdateTx(ctx context.Context, tx pgx
 	return s.GetContractByIDTx(ctx, tx, id)
 }
 
+func (s stubContractRepo) GetActiveContractByCompanyIDTx(
+	ctx context.Context,
+	tx pgx.Tx,
+	companyID int,
+) (*domain.ContractEntity, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.contract, nil
+}
+
 func (s stubContractRepo) CreateContractTx(ctx context.Context, tx pgx.Tx, contract *domain.ContractEntity) (*domain.ContractEntity, error) {
 	if s.err != nil {
 		return nil, s.err
@@ -86,6 +97,42 @@ func TestGetContractByID_NotFound(t *testing.T) {
 		nil,
 		stubContractRepo{err: storage.ErrContractNotFound},
 		&domain.GetContractByIDInput{ContractID: 1},
+	)
+	if !errors.Is(err, usecase.ErrContractNotFound) {
+		t.Fatalf("got %v, want ErrContractNotFound", err)
+	}
+}
+
+func TestGetActiveContractByCompanyID_OK(t *testing.T) {
+	uc := usecase.NewContractUseCase()
+	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	got, err := uc.GetActiveContractByCompanyID(
+		context.Background(),
+		nil,
+		stubContractRepo{contract: &domain.ContractEntity{
+			ID:        5,
+			CompanyID: 42,
+			Status:    domain.ContractStatusActive,
+			StartDate: now,
+			EndDate:   now.AddDate(1, 0, 0),
+		}},
+		&domain.GetActiveContractByCompanyIDInput{CompanyID: 42},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ID != 5 || got.CompanyID != 42 || got.Status != domain.ContractStatusActive {
+		t.Fatalf("unexpected: %+v", got)
+	}
+}
+
+func TestGetActiveContractByCompanyID_NotFound(t *testing.T) {
+	uc := usecase.NewContractUseCase()
+	_, err := uc.GetActiveContractByCompanyID(
+		context.Background(),
+		nil,
+		stubContractRepo{err: storage.ErrContractNotFound},
+		&domain.GetActiveContractByCompanyIDInput{CompanyID: 99},
 	)
 	if !errors.Is(err, usecase.ErrContractNotFound) {
 		t.Fatalf("got %v, want ErrContractNotFound", err)
