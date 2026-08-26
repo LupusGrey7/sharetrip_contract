@@ -37,18 +37,6 @@ func (s *stubContractUseCase) CreateContract(
 	return s.output, nil
 }
 
-func (s *stubContractUseCase) GetContractByID(
-	ctx context.Context,
-	tx pgx.Tx,
-	repo storage.BaseTxContractRepository,
-	input *domain.GetContractByIDInput,
-) (*domain.ContractOutput, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-	return s.output, nil
-}
-
 func (s *stubContractUseCase) GetActiveContractByCompanyID(
 	ctx context.Context,
 	tx pgx.Tx,

@@ -18,17 +18,6 @@ type stubContractRepo struct {
 	err      error
 }
 
-func (s stubContractRepo) GetContractByIDTx(ctx context.Context, tx pgx.Tx, id int) (*domain.ContractEntity, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-	return s.contract, nil
-}
-
-func (s stubContractRepo) GetContractByIDForUpdateTx(ctx context.Context, tx pgx.Tx, id int) (*domain.ContractEntity, error) {
-	return s.GetContractByIDTx(ctx, tx, id)
-}
-
 func (s stubContractRepo) GetActiveContractByCompanyIDTx(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -87,19 +76,6 @@ func TestCreateContract_InvalidDates(t *testing.T) {
 	})
 	if !errors.Is(err, usecase.ErrInvalidRequest) {
 		t.Fatalf("got %v, want ErrInvalidRequest", err)
-	}
-}
-
-func TestGetContractByID_NotFound(t *testing.T) {
-	uc := usecase.NewContractUseCase()
-	_, err := uc.GetContractByID(
-		context.Background(),
-		nil,
-		stubContractRepo{err: storage.ErrContractNotFound},
-		&domain.GetContractByIDInput{ContractID: 1},
-	)
-	if !errors.Is(err, usecase.ErrContractNotFound) {
-		t.Fatalf("got %v, want ErrContractNotFound", err)
 	}
 }
 

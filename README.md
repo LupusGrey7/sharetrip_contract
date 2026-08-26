@@ -212,11 +212,14 @@ after migrate → run app
 
 ```curl
 POST /api/v2/contracts/
-PUT  /api/v2/services   (trip_creation, is_enabled: true)
-GET  /api/v2/contracts/{id}
 GET  /api/v2/contracts/active?companyId={companyId}
+GET  /api/v2/companies/{companyId}/services/trip_creation/availability
+GET  /api/v2/openapi.yaml
 GET  /healthcheck
 ```
+
+Для `trip_creation → allowed: true` без `PUT /services` используй `make seed` (или SQL в `scripts/seeds`).
+`PUT /services` и `GET /contracts/{id}` убраны из кода (остались только в OpenAPI yaml).
 
 ## Технологический стек
 

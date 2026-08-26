@@ -103,22 +103,6 @@ func TestAPIWithPostgres(t *testing.T) {
 			t.Fatalf("unexpected created contract: %+v", created)
 		}
 
-		getResp := sendRequest(
-			t,
-			fiberApp,
-			http.MethodGet,
-			fmt.Sprintf("/api/v2/contracts/%d", created.ID),
-			nil,
-		)
-		requireStatus(t, getResp, http.StatusOK)
-
-		var found api.ContractResponse
-		decodeResponse(t, getResp, &found)
-		closeBody(t, getResp)
-		if found.ID != created.ID || found.ContractNumber != created.ContractNumber {
-			t.Fatalf("unexpected fetched contract: %+v", found)
-		}
-
 		activeResp := sendRequest(
 			t,
 			fiberApp,
@@ -134,18 +118,16 @@ func TestAPIWithPostgres(t *testing.T) {
 			t.Fatalf("unexpected active contract: %+v", active)
 		}
 
-		upsertBody := fmt.Appendf(nil, `{
-			"contract_id": %d,
-			"services": [{"service_code": "trip_creation", "is_enabled": true}]
-		}`, created.ID)
-		upsertResp := sendRequest(t, fiberApp, http.MethodPut, "/api/v2/services", upsertBody)
-		requireStatus(t, upsertResp, http.StatusOK)
-
-		var upserted api.UpsertServicesResponse
-		decodeResponse(t, upsertResp, &upserted)
-		closeBody(t, upsertResp)
-		if upserted.ContractID != created.ID || len(upserted.Services) != 1 || !upserted.Services[0].IsEnabled {
-			t.Fatalf("unexpected upsert response: %+v", upserted)
+		// Upsert HTTP removed in v2 slim API — enable trip_creation via SQL (same as seed).
+		_, err := pool.Exec(
+			ctx,
+			`INSERT INTO contract_management.contract_services (contract_id, service_code, is_enabled)
+			 VALUES ($1, 'trip_creation', true)
+			 ON CONFLICT (contract_id, service_code) DO UPDATE SET is_enabled = EXCLUDED.is_enabled`,
+			created.ID,
+		)
+		if err != nil {
+			t.Fatalf("seed contract_services: %v", err)
 		}
 
 		availabilityResp := sendRequest(

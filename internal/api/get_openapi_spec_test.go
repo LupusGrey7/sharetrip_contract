@@ -13,7 +13,6 @@ func TestGetOpenAPISpec_HTTP_200(t *testing.T) {
 
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{},
 	}
 	app := newRoutesApp(t, srv)
@@ -42,7 +41,6 @@ func TestGetOpenAPISpec_HTTP_404(t *testing.T) {
 
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{},
 	}
 	app := newRoutesApp(t, srv)

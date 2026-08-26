@@ -90,7 +90,6 @@ func TestCreateContract_HTTP(t *testing.T) {
 			srv := &Server{
 				Validator:       validator.New(validator.WithRequiredStructEnabled()),
 				ContractService: tt.service,
-				OfferingService: stubOfferingService{},
 				CompanyService:  &stubCompanyService{},
 			}
 

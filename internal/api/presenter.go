@@ -15,13 +15,6 @@ func toCreateContractInput(r *CreateContractRequest) *domain.CreateContractInput
 	}
 }
 
-func toGetContractByIDInput(r *GetContractByIDRequest) *domain.GetContractByIDInput {
-	if r == nil {
-		return nil
-	}
-	return &domain.GetContractByIDInput{ContractID: r.ContractID}
-}
-
 func toGetActiveContractByCompanyIDInput(r *GetActiveContractByCompanyIDRequest) *domain.GetActiveContractByCompanyIDInput {
 	if r == nil {
 		return nil
@@ -42,40 +35,6 @@ func toContractResponse(output *domain.ContractOutput) *ContractResponse {
 		EndDate:        output.EndDate,
 		CreatedAt:      output.CreatedAt,
 		UpdatedAt:      output.UpdatedAt,
-	}
-}
-
-func toUpsertInput(r *UpsertServicesRequest) *domain.UpsertContractServicesInput {
-	if r == nil {
-		return nil
-	}
-	items := make([]domain.ServiceItemInput, 0, len(r.Services))
-	for _, s := range r.Services {
-		items = append(items, domain.ServiceItemInput{
-			ServiceCode: s.ServiceCode,
-			IsEnabled:   s.IsEnabled,
-		})
-	}
-	return &domain.UpsertContractServicesInput{
-		ContractID: r.ContractID,
-		Services:   items,
-	}
-}
-
-func toUpsertResponse(r *domain.UpsertContractServicesOutput) *UpsertServicesResponse {
-	if r == nil {
-		return nil
-	}
-	items := make([]UpsertServiceItemResponse, 0, len(r.Services))
-	for _, s := range r.Services {
-		items = append(items, UpsertServiceItemResponse{
-			ServiceCode: s.ServiceCode,
-			IsEnabled:   s.IsEnabled,
-		})
-	}
-	return &UpsertServicesResponse{
-		ContractID: r.ContractID,
-		Services:   items,
 	}
 }
 

@@ -26,7 +26,7 @@ func (s stubInfoUseCase) GetHealthcheckInfo(ctx context.Context) (*domain.Health
 func newTestApp(t *testing.T, uc stubInfoUseCase) *fiber.App {
 	t.Helper()
 	healthcheckSvc := service.NewHealthcheckService(uc)
-	srv := NewServer(nil, healthcheckSvc, nil, nil, nil)
+	srv := NewServer(nil, healthcheckSvc, nil, nil)
 	fiberApp := fiber.New()
 	srv.SetupRoutes(fiberApp)
 	return fiberApp

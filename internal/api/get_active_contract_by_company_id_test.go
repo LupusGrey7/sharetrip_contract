@@ -18,8 +18,7 @@ import (
 // Handler: get_active_contract_by_company_id.go.
 //
 // Review asked for get_active_contract_by_id_test.go. That name mixed two YAML
-// operations. We split: this file is get-active-by-company; get-by-id is
-// get_contract_by_id_test.go.
+// operations. This file is get-active-by-company (yaml ~177).
 
 func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 	now := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -87,7 +86,6 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 			srv := &Server{
 				Validator:       validator.New(validator.WithRequiredStructEnabled()),
 				ContractService: tt.service,
-				OfferingService: stubOfferingService{},
 				CompanyService:  &stubCompanyService{},
 			}
 

@@ -46,11 +46,6 @@ type CreateContractInput struct {
 	EndDate        time.Time
 }
 
-// GetContractByIDInput — input for service/usecase.
-type GetContractByIDInput struct {
-	ContractID int
-}
-
 // GetActiveContractByCompanyIDInput — OpenAPI getActiveContractByCompanyId (query companyId).
 type GetActiveContractByCompanyIDInput struct {
 	CompanyID int

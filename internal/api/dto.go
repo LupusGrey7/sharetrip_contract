@@ -24,26 +24,6 @@ type ContractResponse struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
-type UpsertServiceItemRequest struct {
-	ServiceCode string `json:"service_code" validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
-	IsEnabled   bool   `json:"is_enabled"`
-}
-
-type UpsertServicesRequest struct {
-	ContractID int                        `json:"contract_id" validate:"required,min=1"`
-	Services   []UpsertServiceItemRequest `json:"services" validate:"required,min=1,dive"`
-}
-
-type UpsertServiceItemResponse struct {
-	ServiceCode string `json:"service_code"`
-	IsEnabled   bool   `json:"is_enabled"`
-}
-
-type UpsertServicesResponse struct {
-	ContractID int                         `json:"contract_id"`
-	Services   []UpsertServiceItemResponse `json:"services"`
-}
-
 type HealthcheckResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
@@ -66,11 +46,6 @@ type AvailabilityResult struct {
 type GetAvailableOfferingByCompanyIDRequest struct {
 	CompanyID   int    `params:"companyId" validate:"required,min=1"`
 	ServiceCode string `params:"serviceCode" validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
-}
-
-// GetContractByIDRequest — Fiber ParamsParser (path).
-type GetContractByIDRequest struct {
-	ContractID int `params:"contractId" validate:"required,min=1"`
 }
 
 // GetActiveContractByCompanyIDRequest — Fiber QueryParser (OpenAPI query companyId).
