@@ -4,6 +4,7 @@ package domain
 type ServiceCode string
 
 const (
+	ServiceCodeTripStart        ServiceCode = "trip_start" // ShareTrip moveTripPublished-ToStarted
 	ServiceCodeTripCreation     ServiceCode = "trip_creation"
 	ServiceCodeTripParticipants ServiceCode = "trip_participants"
 	ServiceCodeNotifications    ServiceCode = "notifications"

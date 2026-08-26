@@ -287,6 +287,7 @@ paths:
           required: true
           type: string
           enum:
+            - trip_start
             - trip_creation
             - trip_participants
             - notifications
@@ -461,6 +462,7 @@ definitions:
       service_code:
         type: string
         enum:
+          - trip_start
           - trip_creation
           - trip_participants
           - notifications
@@ -515,6 +517,7 @@ definitions:
       service_code:
         type: string
         enum:
+          - trip_start
           - trip_creation
           - trip_participants
           - notifications
