@@ -45,7 +45,7 @@ type AvailabilityResult struct {
 // GetAvailableOfferingByCompanyIDRequest — Fiber ParamsParser (path).
 type GetAvailableOfferingByCompanyIDRequest struct {
 	CompanyID   int    `params:"companyId" validate:"required,min=1"`
-	ServiceCode string `params:"serviceCode" validate:"required,oneof=trip_creation trip_participants notifications premium_support"`
+	ServiceCode string `params:"serviceCode" validate:"required,oneof=trip_start trip_creation trip_participants notifications premium_support"`
 }
 
 // GetActiveContractByCompanyIDRequest — Fiber QueryParser (OpenAPI query companyId).
