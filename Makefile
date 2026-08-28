@@ -53,6 +53,7 @@ GO_PKG := ./...
 APP_NAME=sharetrip_contract
 BUILD_DIR=./build
 MAIN_FILE=cmd/contract/main.go
+HTTP_PORT ?= 8082
 DB_DSN=$(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 MIGRATIONS_DIR = ./migrations
 SEEDS_DIR := ./scripts/seeds
@@ -163,9 +164,9 @@ run:
 .PHONY: e2e
 e2e:
 ifeq ($(OS),Windows_NT)
-	powershell -NoProfile -Command "$$r = Invoke-WebRequest -Uri http://localhost:8080/healthcheck -UseBasicParsing; if ($$r.StatusCode -ne 200) { exit 1 }; if ($$r.Content -notmatch '\"status\"\s*:\s*\"ok\"') { exit 1 }"
+	powershell -NoProfile -Command "$$r = Invoke-WebRequest -Uri http://localhost:$(HTTP_PORT)/healthcheck -UseBasicParsing; if ($$r.StatusCode -ne 200) { exit 1 }; if ($$r.Content -notmatch '\"status\"\s*:\s*\"ok\"') { exit 1 }"
 else
-	curl -sf http://localhost:8080/healthcheck | grep -q '"status":"ok"'
+	curl -sf http://localhost:$(HTTP_PORT)/healthcheck | grep -q '"status":"ok"'
 endif
 
 # ============================================================

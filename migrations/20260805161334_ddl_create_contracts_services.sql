@@ -40,6 +40,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_contract_services_unique ON contract_manag
 INSERT INTO contract_management.services (service_code, description, is_active)
 VALUES ('trip_creation', 'создание поездок', TRUE) ON CONFLICT (service_code) DO NOTHING;
 INSERT INTO contract_management.services (service_code, description, is_active)
+VALUES ('trip_start', 'старт поездки (ShareTrip moveTripPublished-ToStarted)', TRUE) ON CONFLICT (service_code) DO NOTHING;
+INSERT INTO contract_management.services (service_code, description, is_active)
 VALUES ('trip_participants', 'добавление участников поездки', TRUE) ON CONFLICT (service_code) DO NOTHING;
 INSERT INTO contract_management.services (service_code, description, is_active)
 VALUES ('notifications', 'отправка уведомлений', TRUE) ON CONFLICT (service_code) DO NOTHING;

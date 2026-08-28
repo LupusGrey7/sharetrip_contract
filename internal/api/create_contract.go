@@ -10,14 +10,14 @@ import (
 )
 
 func (s *Server) CreateContract(c *fiber.Ctx) error {
-	tracer := otel.Tracer("trip-contract-api")
+	tracer := otel.Tracer("contract-api")
 	ctx, span := tracer.Start(c.UserContext(), "CreateContractHandler")
 	traceID := span.SpanContext().TraceID().String()
 	c.Set("X-Request-ID", traceID)
 	defer span.End()
 
 	logger := logctx.Logger(ctx).With(
-		slog.String("server", "TripContractServer"),
+		slog.String("server", "ContractServer"),
 		slog.String("handler", "CreateContract"),
 		slog.String("trace_id", traceID),
 	)

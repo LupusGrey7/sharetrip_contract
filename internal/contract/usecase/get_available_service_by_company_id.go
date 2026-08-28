@@ -8,9 +8,11 @@ import (
 	"strconv"
 
 	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
+	"go.opentelemetry.io/otel"
 )
 
 // GetAvailableOfferingByCompanyID — three explicit checks → three different outcomes for the client.
@@ -25,30 +27,32 @@ func (u *CompanyUseCase) GetAvailableOfferingByCompanyID(
 	companyRepo storage.BaseCompanyRepository,
 	input *domain.GetAvailableOfferingByCompanyIDInput,
 ) (*domain.AvailabilityOutput, error) {
-	log := slog.With(
+	ctxSpc, span := otel.Tracer("CompanyUseCase").Start(ctx, "CompanyUseCase.GetAvailableOfferingByCompanyID")
+	defer span.End()
+
+	log := logctx.Logger(ctxSpc).With(
+		slog.String("layer", "useCase"),
+		slog.String("useCase", "GetAvailableOfferingByCompanyID"),
 		slog.String("company_id", strconv.Itoa(input.CompanyID)),
 		slog.String("service_code", string(input.ServiceCode)),
 	)
 	log.Debug("get available offering by company id started")
 
-	// 1)check: company exists = at least one contract with this company_id
-	if err := companyRepo.IsCompanyKnownByIDTx(ctx, tx, input.CompanyID); err != nil {
+	if err := companyRepo.IsCompanyKnownByIDTx(ctxSpc, tx, input.CompanyID); err != nil {
 		if errors.Is(err, storage.ErrCompanyNotFound) {
 			return nil, ErrCompanyNotFound
 		}
 		return nil, fmt.Errorf("IsCompanyKnownByIDTx: %w", err)
 	}
 
-	// 2)check: service exists in the dictionary
-	if err := offeringRepo.IsOfferingExistsByCodeTx(ctx, tx, string(input.ServiceCode)); err != nil {
+	if err := offeringRepo.IsOfferingExistsByCodeTx(ctxSpc, tx, string(input.ServiceCode)); err != nil {
 		if errors.Is(err, storage.ErrOfferingNotFound) {
 			return nil, ErrServiceNotFound
 		}
 		return nil, fmt.Errorf("IsOfferingExistsByCodeTx: %w", err)
 	}
 
-	// 3)final check: active + contract_services
-	entity, err := companyRepo.GetAvailableOfferingByCompanyIDTx(ctx, tx, input.CompanyID, input.ServiceCode)
+	entity, err := companyRepo.GetAvailableOfferingByCompanyIDTx(ctxSpc, tx, input.CompanyID, input.ServiceCode)
 	if err != nil {
 		return nil, fmt.Errorf("GetAvailableOfferingByCompanyIDTx: %w", err)
 	}

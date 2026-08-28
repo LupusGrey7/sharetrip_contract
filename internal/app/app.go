@@ -12,7 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"job4j/sharetrip-contract/configs"
-
+	"job4j/sharetrip-contract/internal/middleware"
 	"job4j/sharetrip-contract/internal/observability/tracing"
 )
 
@@ -35,13 +35,15 @@ func New(pool *pgxpool.Pool) *fiber.App {
 
 	httpSrv := api.NewServer(validate, healthcheckService, contractSvc, companySvc)
 	fiberApp := fiber.New()
+	fiberApp.Use(tracing.NewFiberMiddleware())
+	fiberApp.Use(middleware.Correlation())
 	httpSrv.SetupRoutes(fiberApp)
 	return fiberApp
 }
 
 func InitTracing(ctx context.Context) (*tracing.TracerProvider, error) {
 	return tracing.NewProvider(ctx, tracing.Config{
-		ServiceName:    configs.Env("OTEL_SERVICE_NAME", "share-trip"),
+		ServiceName:    configs.Env("OTEL_SERVICE_NAME", "sharetrip-contract"),
 		ServiceVersion: configs.Env("OTEL_SERVICE_VERSION", "1.0.0"),
 		Environment:    configs.Env("OTEL_ENVIRONMENT", "local"),
 		Endpoint:       configs.Env("OTEL_EXPORTER_ENDPOINT", "localhost:4319"),

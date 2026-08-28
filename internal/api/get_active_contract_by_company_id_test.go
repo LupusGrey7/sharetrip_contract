@@ -23,9 +23,10 @@ import (
 
 func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 	now := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
+	contractID := uuid.MustParse("00000000-0000-0000-0000-000000000005")
 
 	active := &domain.ContractOutput{
-		ID:             uuid.New(),
+		ID:             contractID,
 		ContractNumber: "C-5",
 		CompanyID:      42,
 		Status:         domain.ContractStatusActive,
@@ -101,7 +102,7 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 			if tt.wantStatus == http.StatusOK {
 				var got ContractResponse
 				decodeJSON(t, resp, &got)
-				if got.ID != 5 || got.CompanyID != 42 || got.Status != string(domain.ContractStatusActive) {
+				if got.ID != contractID || got.CompanyID != 42 || got.Status != string(domain.ContractStatusActive) {
 					t.Fatalf("unexpected response: %+v", got)
 				}
 				return

@@ -47,6 +47,7 @@ deploy/docker-compose.yml
 tmp/
 project_info/
 scripts/
+api/postman_collections/
 
 #logs
 deploy/logs/

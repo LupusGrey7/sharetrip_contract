@@ -12,7 +12,7 @@ import (
 )
 
 const createContract = `
-INSERT INTO contracts (
+INSERT INTO contract_management.contracts (
 	contract_number, company_id, status_id, start_date, end_date
 ) VALUES ($1, $2, $3, $4, $5)
 RETURNING id, contract_number, company_id, status_id, start_date, end_date, created_at, updated_at`

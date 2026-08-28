@@ -55,8 +55,8 @@ func TestLoad_usesDefaultsWithoutLocalEnvFile(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 
-	if cfg.HTTPPort != "8080" {
-		t.Fatalf("HTTPPort = %q, want 8080", cfg.HTTPPort)
+	if cfg.HTTPPort != "8082" {
+		t.Fatalf("HTTPPort = %q, want 8082", cfg.HTTPPort)
 	}
 	if cfg.Database.Host != "localhost" {
 		t.Fatalf("Database.Host = %q, want localhost", cfg.Database.Host)

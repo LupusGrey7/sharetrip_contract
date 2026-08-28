@@ -199,6 +199,7 @@ func sendRequest(t *testing.T, app *fiber.App, method, path string, body []byte)
 	if err != nil {
 		t.Fatalf("create request: %v", err)
 	}
+	req.Host = "localhost"
 	if body != nil {
 		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	}

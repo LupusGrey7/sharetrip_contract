@@ -41,6 +41,7 @@ func TestHealthcheck_OK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Host = "localhost"
 	resp, err := fiberApp.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -74,6 +75,7 @@ func TestHealthcheck_DBDown_Returns503(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Host = "localhost"
 	resp, err := fiberApp.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)

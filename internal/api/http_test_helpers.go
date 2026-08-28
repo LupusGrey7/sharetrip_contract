@@ -46,6 +46,7 @@ func performRequest(t *testing.T, app interface {
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Host = "localhost"
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

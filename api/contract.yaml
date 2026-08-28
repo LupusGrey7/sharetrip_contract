@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "ShareTrip Contract Service API. Manages company contracts and service availability. OpenAPI file: api/contract.yaml — open in Swagger Editor (https://editor.swagger.io → Import file) or GET /api/v2/openapi.yaml from a running service."
+  description: "ShareTrip Contract Service API. Manages company contracts and service availability. OpenAPI file: api/contract.yaml — Swagger UI http://localhost:8086 or GET /api/v2/contracts/openapi from a running service."
   version: "1.0.2"
   title: "ShareTrip Contract Service"
   contact:
@@ -20,7 +20,7 @@ schemes:
   - https
   - http
 paths:
-  /openapi.yaml:
+  /contracts/openapi:
     get:
       tags:
         - docs

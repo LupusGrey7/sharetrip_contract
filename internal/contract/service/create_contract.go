@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-0
+	"strconv"
+
 	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 
 	"github.com/jackc/pgx/v5"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"job4j/sharetrip-contract/internal/observability/logctx"
 )
 
 func (s *ContractService) CreateContract(
@@ -19,7 +19,7 @@ func (s *ContractService) CreateContract(
 	input *domain.CreateContractInput,
 ) (res *domain.ContractOutput, err error) {
 	// 1. Integration with Jaeger: create a child span for this layer (ctx now contains the ID of this span)
-	ctxSpc, span := otel.Tracer("TripService").Start(ctx, "TripService.CreateTripDraft")
+	ctxSpc, span := otel.Tracer("ContractService").Start(ctx, "ContractService.CreateContract")
 
 	defer func() {
 		// Now 'err' is taken from the return of the function. If an error occurred below in the stack, err != nil
@@ -33,13 +33,22 @@ func (s *ContractService) CreateContract(
 
 	//getting custom logger context
 	logger := logctx.Logger(ctxSpc).With(
-		slog.String("service", "TripContractService"),
-		slog.String("operation", "CreateTripDraft"),
-		slog.String("company_id", req.CompanyID.String()),
+		slog.String("service", "ContractService"),
+		slog.String("operation", "CreateContract"),
+		slog.String("company_id", strconv.Itoa(input.CompanyID)),
 	)
-	logger.Debug("create trip draft started")
+	logger.Debug("create contract started")
 
-	// 4. Open a database transaction
+	if s.pool == nil {
+		res, err = s.useCase.CreateContract(ctxSpc, nil, s.repo, input)
+		if err != nil {
+			return nil, fmt.Errorf("CreateContract: %w", err)
+		}
+		logger.Debug("create contract completed", slog.String("contract_id", res.ID.String()))
+		return res, nil
+	}
+
+	// Open a database transaction
 	// Mandatory to create a sub-span for the transaction to measure its clean duration
 	txCtx, txSpan := otel.Tracer("database").Start(ctxSpc, "DB.Transaction")
 	defer txSpan.End()
@@ -48,9 +57,9 @@ func (s *ContractService) CreateContract(
 		txLogger := logger.With(slog.String("layer", "transaction"))
 		txLogger.Debug("transaction create contract execution started")
 
-		resp, err := s.useCase.CreateContract(ctx, pgTx, s.repo, input)
+		resp, err := s.useCase.CreateContract(txCtx, pgTx, s.repo, input)
 		if err != nil {
-			txLogger.Error("create trip contract usecase failed", slog.Any("error", err))
+			txLogger.Error("create contract usecase failed", slog.Any("error", err))
 			return nil, fmt.Errorf("usecase.CreateContract: %w", err)
 		}
 
@@ -61,6 +70,6 @@ func (s *ContractService) CreateContract(
 		return nil, fmt.Errorf("CreateContract: %w", err)
 	}
 
-	logger.Debug("create contract completed", slog.String("trip_id", res.ID.String()))
+	logger.Debug("create contract completed", slog.String("contract_id", res.ID.String()))
 	return res, nil
 }

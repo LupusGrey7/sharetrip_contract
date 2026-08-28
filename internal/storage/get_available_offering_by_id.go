@@ -8,8 +8,10 @@ import (
 	"strconv"
 
 	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 
 	"github.com/jackc/pgx/v5"
+	"go.opentelemetry.io/otel"
 )
 
 // Финальная проверка availability (после того как company известна и code есть в словаре).
@@ -31,17 +33,20 @@ func (r *CompanyRepository) GetAvailableOfferingByCompanyIDTx(
 	companyID int,
 	serviceCode domain.ServiceCode,
 ) (*domain.AvailabilityEntity, error) {
-	log := slog.With(
+	ctxSpc, span := otel.Tracer("CompanyRepository").Start(ctx, "CompanyRepository.GetAvailableOfferingByCompanyIDTx")
+	defer span.End()
+
+	log := logctx.Logger(ctxSpc).With(
+		slog.String("layer", "repository"),
+		slog.String("repository", "GetAvailableOfferingByCompanyIDTx"),
 		slog.String("company_id", strconv.Itoa(companyID)),
 		slog.String("service_code", string(serviceCode)),
 	)
-	log.Debug("get available offering by company id started")
 
 	var enabled bool
-	err := tx.QueryRow(ctx, getAvailableOfferingByCompanyIDQuery, companyID, string(serviceCode)).Scan(&enabled)
+	err := tx.QueryRow(ctxSpc, getAvailableOfferingByCompanyIDQuery, companyID, string(serviceCode)).Scan(&enabled)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			// Компания и код уже проверены выше по flow — здесь нет активной связки.
 			return &domain.AvailabilityEntity{
 				CompanyID:   companyID,
 				ServiceCode: serviceCode,

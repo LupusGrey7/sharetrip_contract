@@ -98,7 +98,7 @@ func TestGetActiveContractByCompanyID_OK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != 5 || got.CompanyID != 42 || got.Status != domain.ContractStatusActive {
+	if got.ID == uuid.Nil || got.CompanyID != 42 || got.Status != domain.ContractStatusActive {
 		t.Fatalf("unexpected: %+v", got)
 	}
 }
