@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS contract_management.services (
 -- Create a table for contract services (services - these are the services that are provided as part of the contract)
 CREATE TABLE IF NOT EXISTS contract_management.contract_services (
     id SERIAL NOT NULL,
-    contract_id INT NOT NULL,
+    contract_id UUID NOT NULL,
     service_code VARCHAR(32) NOT NULL, -- 'trip_creation', 'trip_participants', 'notifications', 'premium_support'
     is_enabled BOOLEAN NOT NULL DEFAULT TRUE, -- Flag of availability of services within the contract
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
