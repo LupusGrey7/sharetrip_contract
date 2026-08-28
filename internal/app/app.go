@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"job4j/sharetrip-contract/configs"
 	"job4j/sharetrip-contract/internal/middleware"
@@ -35,6 +36,12 @@ func New(pool *pgxpool.Pool) *fiber.App {
 
 	httpSrv := api.NewServer(validate, healthcheckService, contractSvc, companySvc)
 	fiberApp := fiber.New()
+	// Swagger UI (:8086) calls API (:8082) from the browser — CORS required for Try it out.
+	fiberApp.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:8086,http://127.0.0.1:8086",
+		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		AllowHeaders: "Origin,Content-Type,Accept,Authorization,X-Request-ID",
+	}))
 	fiberApp.Use(tracing.NewFiberMiddleware())
 	fiberApp.Use(middleware.Correlation())
 	httpSrv.SetupRoutes(fiberApp)
