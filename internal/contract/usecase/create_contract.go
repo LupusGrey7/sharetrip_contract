@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"time"
 
-	"go.opentelemetry.io/otel"
 	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/observability/logctx"
 	"job4j/sharetrip-contract/internal/storage"
+
+	"go.opentelemetry.io/otel"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -58,6 +58,6 @@ func (u *ContractUseCase) CreateContract(
 		return nil, err
 	}
 
-	logger.Debug("create contract usecase completed", slog.Int("contract_id", entity.ID.String())
+	logger.Debug("create contract usecase completed", slog.String("contract_id", entity.ID.String()))
 	return domain.ContractEntityToOutput(entity), nil
 }

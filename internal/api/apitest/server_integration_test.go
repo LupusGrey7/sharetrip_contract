@@ -22,6 +22,7 @@ import (
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
@@ -99,7 +100,7 @@ func TestAPIWithPostgres(t *testing.T) {
 		var created api.ContractResponse
 		decodeResponse(t, createResp, &created)
 		closeBody(t, createResp)
-		if created.ID <= 0 || created.CompanyID != companyID || created.Status != "active" {
+		if created.ID == uuid.Nil || created.CompanyID != companyID || created.Status != "active" {
 			t.Fatalf("unexpected created contract: %+v", created)
 		}
 

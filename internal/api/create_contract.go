@@ -3,9 +3,10 @@ package api
 import (
 	"log/slog"
 
+	"job4j/sharetrip-contract/internal/observability/logctx"
+
 	"github.com/gofiber/fiber/v2"
 	"go.opentelemetry.io/otel"
-	"job4j/sharetrip-contract/internal/observability/logctx"
 )
 
 func (s *Server) CreateContract(c *fiber.Ctx) error {
@@ -44,6 +45,6 @@ func (s *Server) CreateContract(c *fiber.Ctx) error {
 	}
 
 	out := toContractResponse(resp)
-	logger.Debug("CreateContract completed", slog.Int("contract_id", out.ID))
+	logger.Debug("CreateContract completed", slog.String("contract_id", out.ID.String()))
 	return c.Status(fiber.StatusCreated).JSON(out)
 }

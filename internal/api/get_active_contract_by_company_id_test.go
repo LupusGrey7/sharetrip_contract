@@ -11,6 +11,7 @@ import (
 	"job4j/sharetrip-contract/internal/contract/usecase"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 // HTTP component tests for GET /api/v2/contracts/active?companyId=
@@ -24,7 +25,7 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 	now := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 	active := &domain.ContractOutput{
-		ID:             5,
+		ID:             uuid.New(),
 		ContractNumber: "C-5",
 		CompanyID:      42,
 		Status:         domain.ContractStatusActive,

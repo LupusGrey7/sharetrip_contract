@@ -10,6 +10,7 @@ import (
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -34,7 +35,7 @@ func (s stubContractRepo) CreateContractTx(ctx context.Context, tx pgx.Tx, contr
 		return nil, s.err
 	}
 	out := *contract
-	out.ID = 42
+	out.ID = uuid.New()
 	out.CreatedAt = time.Now()
 	out.UpdatedAt = out.CreatedAt
 	return &out, nil
@@ -53,7 +54,7 @@ func TestCreateContract_OK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != 42 {
+	if got.ID == uuid.Nil {
 		t.Fatalf("id = %d, want 42", got.ID)
 	}
 	if got.Status != domain.ContractStatusDraft {
@@ -86,7 +87,7 @@ func TestGetActiveContractByCompanyID_OK(t *testing.T) {
 		context.Background(),
 		nil,
 		stubContractRepo{contract: &domain.ContractEntity{
-			ID:        5,
+			ID:        uuid.New(),
 			CompanyID: 42,
 			Status:    domain.ContractStatusActive,
 			StartDate: now,
