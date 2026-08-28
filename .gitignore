@@ -50,7 +50,7 @@ scripts/
 
 #logs
 deploy/logs/
-logs/
+deploy/logs/
 
 #sqruff for lint sql script
 .sqruff

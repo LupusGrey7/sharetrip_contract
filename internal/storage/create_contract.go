@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
-
-	"job4j/sharetrip-contract/internal/contract/domain"
 
 	"github.com/jackc/pgx/v5"
+	"go.opentelemetry.io/otel"
+	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 )
 
 const createContract = `
-INSERT INTO contract_management.contracts (
+INSERT INTO contracts (
 	contract_number, company_id, status_id, start_date, end_date
 ) VALUES ($1, $2, $3, $4, $5)
 RETURNING id, contract_number, company_id, status_id, start_date, end_date, created_at, updated_at`
@@ -20,29 +20,40 @@ RETURNING id, contract_number, company_id, status_id, start_date, end_date, crea
 func (r *ContractRepository) CreateContractTx(
 	ctx context.Context,
 	tx pgx.Tx,
-	entity *domain.ContractEntity,
+	t *domain.ContractEntity,
 ) (*domain.ContractEntity, error) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
+	//tracing Jaeger
+	tracer := otel.Tracer("ContractRepository")
+	ctxSpc, span := tracer.Start(ctx, "ContractRepository.CreateContractTx")
+
+	defer func() {
+		// 	rows.Close() // process rows sql FIXME
+		span.End() // Span always ends in the end. Jaeger will measure the time between Start and End!
+	}()
+
+	//getting custom logger context
+	logger := logctx.Logger(ctxSpc).With(
 		slog.String("layer", "repository"),
 		slog.String("repository", "CreateContractTx"),
-		slog.Int("company_id", entity.CompanyID),
+		slog.Int("company_id", t.CompanyID),
 	)
-	logger.Debug("CreateContractTx started")
+	logger.Debug("CreateContractTx repository started")
 
-	created, err := scanContractRow(tx.QueryRow(
-		ctx,
-		createContract,
-		entity.ContractNumber,
-		entity.CompanyID,
-		string(entity.Status),
-		entity.StartDate,
-		entity.EndDate,
-	))
+	entity, err := scanContractRow(
+		tx.QueryRow(
+			ctx,
+			createContract,
+			t.ContractNumber,
+			t.CompanyID,
+			string(t.Status),
+			t.StartDate,
+			t.EndDate,
+		))
 	if err != nil {
-		logger.Error("CreateContractTx failed", slog.Any("error", err))
-		return nil, fmt.Errorf("CreateContractTx: %w", err)
+		logger.Error(errSelectEntityFailed, slog.Any("error", err))
+		return &domain.ContractEntity{}, fmt.Errorf("CreateContractTx: %w", err)
 	}
 
-	logger.Debug("CreateContractTx completed", slog.Int("contract_id", created.ID))
-	return created, nil
+	logger.Debug("CreateContractTx completed", slog.String("contract_id", entity.ID.String()))
+	return entity, nil
 }

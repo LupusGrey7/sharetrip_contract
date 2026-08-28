@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 // ContractStatus — status of contract.
 type ContractStatus string
@@ -15,7 +18,7 @@ const (
 
 // ContractEntity — entity used by usecase and storage. It never reaches API.
 type ContractEntity struct {
-	ID             int
+	ID             uuid.UUID
 	ContractNumber string
 	CompanyID      int
 	Status         ContractStatus
@@ -27,7 +30,7 @@ type ContractEntity struct {
 
 // ContractOutput — output from usecase/service to API presenter.
 type ContractOutput struct {
-	ID             int
+	ID             uuid.UUID
 	ContractNumber string
 	CompanyID      int
 	Status         ContractStatus

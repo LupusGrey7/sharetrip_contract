@@ -1,6 +1,9 @@
 package api
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 // HTTP DTO = OpenAPI / JSON / path params on the API boundary.
 // Service/usecase expose Input / Output. Storage entities never reach this package.
@@ -14,7 +17,7 @@ type CreateContractRequest struct {
 }
 
 type ContractResponse struct {
-	ID             int       `json:"id"`
+	ID             uuid.UUID `json:"id" db:"id"`
 	ContractNumber string    `json:"contract_number"`
 	CompanyID      int       `json:"company_id"`
 	Status         string    `json:"status"`

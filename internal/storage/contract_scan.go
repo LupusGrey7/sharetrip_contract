@@ -22,6 +22,7 @@ func scanContractRow(row pgx.Row) (*domain.ContractEntity, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	c.Status = domain.ContractStatus(status)
 	return &c, nil
 }

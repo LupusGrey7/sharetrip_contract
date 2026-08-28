@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"os"
-
 	"job4j/sharetrip-contract/internal/api"
 	"job4j/sharetrip-contract/internal/app"
 	"job4j/sharetrip-contract/internal/config"
 	"job4j/sharetrip-contract/internal/storage"
+	"log/slog"
+	"os"
+	"time"
 )
 
 func main() {
@@ -38,6 +38,20 @@ func run() error {
 	defer pool.Close()
 
 	slog.Info("connected to database")
+
+	// init Tracing (OpenTelemetry → otel-collector → Jaeger)
+	tp, err := app.InitTracing(ctx)
+	if err != nil {
+		slog.Error("init tracing failed", "error", err)
+		os.Exit(1)
+	}
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if shutdownErr := tp.Shutdown(shutdownCtx); shutdownErr != nil {
+			slog.Error("shutdown tracing failed", "error", shutdownErr)
+		}
+	}()
 
 	fiberApp := app.New(pool)
 	addr := ":" + cfg.HTTPPort
