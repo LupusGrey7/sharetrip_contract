@@ -12,6 +12,9 @@
 *.test
 build/
 
+# Orphan .go leftovers after copying project folder between machines (not in git)
+_orphan_backup_*/
+
 # Code coverage profiles and other test artifacts
 *.out
 coverage.*
