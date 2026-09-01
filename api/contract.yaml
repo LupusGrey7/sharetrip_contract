@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
-  description: "ShareTrip Contract Service API. Manages company contracts and service availability."
-  version: "1.0.1"
+  description: "ShareTrip Contract Service API. Manages company contracts and service availability. OpenAPI file: api/contract.yaml — open in Swagger Editor (https://editor.swagger.io → Import file) or GET /api/v2/openapi.yaml from a running service."
+  version: "1.0.2"
   title: "ShareTrip Contract Service"
   contact:
     email: "contracts_service@mail.io"
@@ -14,10 +14,44 @@ tags:
     description: Services available under a contract
   - name: companies
     description: Company-scoped contract checks
+  - name: docs
+    description: API documentation (OpenAPI artifact)
 schemes:
   - https
   - http
 paths:
+  /openapi.yaml:
+    get:
+      tags:
+        - docs
+      summary: Get OpenAPI specification (contract.yaml)
+      description: >
+        Returns the contents of api/contract.yaml from the service process working directory.
+
+        This does NOT open Swagger Editor in the browser by itself — it serves the YAML file.
+        To view in Swagger Editor: https://editor.swagger.io → File → Import file
+        (use the repo file api/contract.yaml, or save this response and import it).
+
+        See also: .docs/cheatsheets/swagger-ui-cheatsheet.md
+      operationId: getOpenAPISpec
+      produces:
+        - application/yaml
+        - text/yaml
+        - application/json
+      responses:
+        200:
+          description: OpenAPI 2.0 document (YAML)
+          schema:
+            type: file
+        404:
+          description: Spec file not found on disk (wrong working directory)
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/Error"
+
   /contracts:
     post:
       tags:
@@ -197,12 +231,12 @@ paths:
           description: Contract ID and list of services to enable/disable
           required: true
           schema:
-            $ref: "#/definitions/ServicesListRequest"
+            $ref: "#/definitions/UpsertServicesRequest"
       responses:
         200:
           description: Services list updated
           schema:
-            $ref: "#/definitions/ServicesListResponse"
+            $ref: "#/definitions/UpsertServicesResponse"
         400:
           description: Invalid request
           schema:
@@ -227,33 +261,57 @@ paths:
       summary: Check service availability for company
       description: >
         Business check for ShareTrip: can company use the given service now
-        (active contract, not expired, service enabled).
+        (company known via contracts, service_code exists in dictionary,
+        active contract has the service enabled).
+
+        Distinct outcomes:
+        - 404 COMPANY_NOT_FOUND — no contracts for this company_id;
+        - 404 SERVICE_NOT_FOUND — service_code not in services dictionary;
+        - 200 allowed=true/false — company and code exist; false means
+          no active link / disabled (see reason).
       operationId: checkServiceAvailabilityForCompany
       produces:
         - application/json
       parameters:
         - name: companyId
           in: path
-          description: Company ID
+          description: External company ID (company_id on contracts)
           required: true
           type: integer
           format: int64
+          minimum: 1
+          example: 42
         - name: serviceCode
           in: path
           description: Stable business service code, e.g. trip_creation
           required: true
           type: string
+          enum:
+            - trip_creation
+            - trip_participants
+            - notifications
+            - premium_support
+          example: trip_creation
       responses:
         200:
-          description: Availability check result
+          description: >
+            Availability result. allowed=false is a successful business answer,
+            not an HTTP error (company and service_code are known).
           schema:
             $ref: "#/definitions/AvailabilityResult"
+          examples:
+            application/json:
+              company_id: 42
+              service_code: trip_creation
+              allowed: true
         400:
-          description: Invalid request
+          description: Invalid companyId or serviceCode
           schema:
             $ref: "#/definitions/Error"
         404:
-          description: Company, contract or service not found
+          description: >
+            Company unknown (COMPANY_NOT_FOUND) or service_code missing
+            from dictionary (SERVICE_NOT_FOUND)
           schema:
             $ref: "#/definitions/Error"
         500:
@@ -275,6 +333,7 @@ definitions:
         description: Error code
         enum:
           - COMPANY_VALIDATE_ERROR
+          - COMPANY_NOT_FOUND
           - CONTRACT_NOT_FOUND
           - SERVICE_NOT_FOUND
           - SERVICE_DISABLED
@@ -328,6 +387,35 @@ definitions:
 
   ContractResponse:
     type: object
+    description: Full contract representation
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Internal contract ID
+      contract_number:
+        type: string
+      company_id:
+        type: integer
+        format: int64
+      status:
+        $ref: "#/definitions/ContractStatus"
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+
+  ContractStatusResponse:
+    type: object
+    description: Same shape as ContractResponse (legacy name in paths)
     properties:
       id:
         type: integer
@@ -372,12 +460,20 @@ definitions:
     properties:
       service_code:
         type: string
-        description: Stable business service code, e.g. trip_creation
+        enum:
+          - trip_creation
+          - trip_participants
+          - notifications
+          - premium_support
+        description: Business service code
+        example: trip_creation
       is_enabled:
         type: boolean
+        default: false
         description: Whether this service is enabled for the contract
+        example: false
 
-  ServicesListRequest:
+  UpsertServicesRequest:
     type: object
     required:
       - contract_id
@@ -393,7 +489,7 @@ definitions:
         items:
           $ref: "#/definitions/ServiceItem"
 
-  ServicesListResponse:
+  UpsertServicesResponse:
     type: object
     properties:
       contract_id:
@@ -406,15 +502,30 @@ definitions:
 
   AvailabilityResult:
     type: object
+    description: Result of service availability check for a company
+    required:
+      - company_id
+      - service_code
+      - allowed
     properties:
       company_id:
         type: integer
         format: int64
+        example: 42
       service_code:
         type: string
+        enum:
+          - trip_creation
+          - trip_participants
+          - notifications
+          - premium_support
+        description: Business service code
+        example: trip_creation
       allowed:
         type: boolean
         description: true if company can use the service now
+        example: true
       reason:
         type: string
         description: Optional reason when allowed=false
+        example: no active contract with this service

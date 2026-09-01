@@ -79,6 +79,39 @@ Contract Service отвечает только за договорные усл�
 Если договор отсутствует, неактивен (в статусе suspended) или истек( terminated) или услуга запрещена, сервис возвращает отказ.
 
 
+### Makefile
+
+##### Проверка что приложение и БД активны и работают
+В Makefile e2e  /healthcheck.
+
+в терминале введить
+```txt
+make e2e
+```
+
+```txt
+Проверка: GET http://localhost:8080/healthcheck
+
+```
+
+#### Автоматические тесты
+
+Быстрые unit/component-тесты и интеграционный API-набор:
+
+```powershell
+make test
+```
+
+Только реальная цепочка `HTTP → service → usecase → storage → PostgreSQL` через Testcontainers:
+
+```powershell
+make test-integration
+```
+
+Integration-тест сам запускает PostgreSQL и получает DSN через `container.ConnectionString`. Локальный `.env.test` и `DATABASE_URL` ему не нужны. Docker должен быть запущен.
+
+Подробно: [как выбирать component, integration и E2E-тесты](.docs/cheatsheets/component-integration-e2e-testing-cheatsheet.md).
+
 ### Алгоритм проверки доступности услуги
 
 ##### Бизнес-сценарий (happy path)
@@ -105,7 +138,7 @@ Contract Service отвечает только за договорные усл�
 ```json
 {
   "company_id": 4829104857,
-  "service_code": "option.animal_transport",
+  "service_code": "trip_creation",
   "allowed": true,
   "reason": "The company contract status is active."
 }
@@ -163,7 +196,7 @@ Contract Service отвечает только за договорные усл�
 ```json
 {
   "company_id": 4829104857,
-  "service_code": "option.animal_transport",
+  "service_code": "trip_creation",
   "allowed": false,
   "reason": "The company contract status is suspended."
 }
@@ -172,12 +205,26 @@ Contract Service отвечает только за договорные усл�
 
 6. Если услуга недоступна, сервис ShareTrip возвращает отказ.
 
+
+---
+### Доступные url
+after migrate → run app
+
+```curl
+POST /api/v2/contracts/
+PUT  /api/v2/services   (trip_creation, is_enabled: true)
+GET  /api/v2/contracts/{id}
+GET  /api/v2/contracts/active?companyId={companyId}
+GET  /healthcheck
+```
+
 ## Технологический стек
 
 - Go
 - PostgreSQL
 - SQL-миграции
 - Docker / docker-compose
+- Testcontainers for Go
 
 ## Документация проекта
 
