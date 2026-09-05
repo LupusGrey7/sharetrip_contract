@@ -2,20 +2,25 @@ package api
 
 import (
 	"log/slog"
-	"os"
+
+	"job4j/sharetrip-contract/internal/observability/logctx"
 
 	"github.com/gofiber/fiber/v2"
+	"go.opentelemetry.io/otel"
 )
 
-func (s *Server) CreateContract(ctx *fiber.Ctx) error {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
-		slog.String("layer", "http"),
+func (s *Server) CreateContract(c *fiber.Ctx) error {
+	tracer := otel.Tracer("contract-api")
+	ctx, span := tracer.Start(c.UserContext(), "CreateContractHandler")
+	defer span.End()
+
+	logger := logctx.Logger(ctx).With(
+		slog.String("server", "ContractServer"),
 		slog.String("handler", "CreateContract"),
 	)
-	logger.Debug("CreateContract started")
 
 	var req CreateContractRequest
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		logger.Warn("CreateContract parse failed", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidRequest.Error())
 	}
@@ -27,13 +32,16 @@ func (s *Server) CreateContract(ctx *fiber.Ctx) error {
 		}
 	}
 
-	resp, err := s.ContractService.CreateContract(ctx.UserContext(), toCreateContractInput(&req))
+	ctx = logctx.WithLogger(ctx, logger)
+	logger.Debug("CreateContract started")
+
+	resp, err := s.ContractService.CreateContract(ctx, toCreateContractInput(&req))
 	if err != nil {
 		logger.Error("CreateContract failed", slog.Any("error", err))
-		return HandleError(ctx, err)
+		return HandleError(c, err)
 	}
 
 	out := toContractResponse(resp)
-	logger.Debug("CreateContract completed", slog.Int("contract_id", out.ID))
-	return ctx.Status(fiber.StatusCreated).JSON(out)
+	logger.Debug("CreateContract completed", slog.String("contract_id", out.ID.String()))
+	return c.Status(fiber.StatusCreated).JSON(out)
 }

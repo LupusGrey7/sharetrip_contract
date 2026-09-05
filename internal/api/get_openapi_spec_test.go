@@ -13,12 +13,12 @@ func TestGetOpenAPISpec_HTTP_200(t *testing.T) {
 
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{},
 	}
 	app := newRoutesApp(t, srv)
 
-	req, _ := http.NewRequest(http.MethodGet, "/api/v2/openapi.yaml", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v2/contracts/openapi", nil)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -42,12 +42,12 @@ func TestGetOpenAPISpec_HTTP_404(t *testing.T) {
 
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{},
 	}
 	app := newRoutesApp(t, srv)
 
-	req, _ := http.NewRequest(http.MethodGet, "/api/v2/openapi.yaml", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v2/contracts/openapi", nil)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)

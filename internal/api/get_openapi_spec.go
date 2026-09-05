@@ -4,9 +4,12 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/gofiber/fiber/v2"
 )
+
+var openAPIHostLine = regexp.MustCompile(`(?m)^host:\s*".*"$`)
 
 // candidate paths: make run from repo root, or binary started from cmd/, build/, etc.
 func openAPISpecCandidates() []string {
@@ -33,6 +36,7 @@ func (s *Server) GetOpenAPISpec(ctx *fiber.Ctx) error {
 			continue
 		}
 		logger.Debug("openapi spec served", slog.String("path", path))
+		data = patchOpenAPIHost(data, ctx.Get("Host"))
 		ctx.Set(fiber.HeaderContentType, "application/yaml; charset=utf-8")
 		return ctx.Status(fiber.StatusOK).Send(data)
 	}
@@ -42,4 +46,12 @@ func (s *Server) GetOpenAPISpec(ctx *fiber.Ctx) error {
 		Code:    "INTERNAL_SERVER_ERROR",
 		Message: "api/contract.yaml not found; run the service from repository root (make run)",
 	})
+}
+
+// patchOpenAPIHost rewrites swagger 2.0 host so Try it out hits the running app (ctx.Host()).
+func patchOpenAPIHost(yaml []byte, host string) []byte {
+	if host == "" || !openAPIHostLine.Match(yaml) {
+		return yaml
+	}
+	return openAPIHostLine.ReplaceAll(yaml, []byte(`host: "`+host+`"`))
 }

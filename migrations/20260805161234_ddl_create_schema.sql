@@ -1,6 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
--- 1. Change the column type to text and simultaneously nullify its data
 
 CREATE SCHEMA IF NOT EXISTS contract_management;
 
@@ -8,7 +7,6 @@ CREATE SCHEMA IF NOT EXISTS contract_management;
 
 -- +goose Down
 -- +goose StatementBegin
--- Create schema contracts
 
 DROP SCHEMA IF EXISTS contract_management RESTRICT;
 

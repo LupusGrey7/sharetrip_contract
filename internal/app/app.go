@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	api "job4j/sharetrip-contract/internal/api"
 	"job4j/sharetrip-contract/internal/contract/service"
 	"job4j/sharetrip-contract/internal/contract/usecase"
@@ -8,7 +10,11 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"job4j/sharetrip-contract/configs"
+	"job4j/sharetrip-contract/internal/middleware"
+	"job4j/sharetrip-contract/internal/observability/tracing"
 )
 
 // New is the composition root: repo -> usecase -> service -> api.Server -> Fiber.
@@ -24,16 +30,29 @@ func New(pool *pgxpool.Pool) *fiber.App {
 	contractSvc := service.NewContractService(pool, contractRepo, contractUC)
 
 	offeringRepo := storage.NewOfferingRepository(pool)
-	linkRepo := storage.NewContractOfferingRepository(pool)
-	offeringUC := usecase.NewOfferingUseCase()
-	offeringSvc := service.NewOfferingService(pool, contractRepo, offeringRepo, linkRepo, offeringUC)
-
 	companyRepo := storage.NewCompanyRepository(pool)
 	companyUC := usecase.NewCompanyUseCase()
 	companySvc := service.NewCompanyService(pool, offeringRepo, companyRepo, companyUC)
 
-	httpSrv := api.NewServer(validate, healthcheckService, contractSvc, offeringSvc, companySvc)
+	httpSrv := api.NewServer(validate, healthcheckService, contractSvc, companySvc)
 	fiberApp := fiber.New()
+	// Swagger UI (:8086) calls API (:8082) from the browser — CORS required for Try it out.
+	fiberApp.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:8086,http://127.0.0.1:8086",
+		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		AllowHeaders: "Origin,Content-Type,Accept,Authorization,X-Request-ID",
+	}))
+	fiberApp.Use(tracing.NewFiberMiddleware())
+	fiberApp.Use(middleware.Correlation())
 	httpSrv.SetupRoutes(fiberApp)
 	return fiberApp
+}
+
+func InitTracing(ctx context.Context) (*tracing.TracerProvider, error) {
+	return tracing.NewProvider(ctx, tracing.Config{
+		ServiceName:    configs.Env("OTEL_SERVICE_NAME", "sharetrip-contract"),
+		ServiceVersion: configs.Env("OTEL_SERVICE_VERSION", "1.0.0"),
+		Environment:    configs.Env("OTEL_ENVIRONMENT", "local"),
+		Endpoint:       configs.Env("OTEL_EXPORTER_ENDPOINT", "localhost:4319"),
+	})
 }

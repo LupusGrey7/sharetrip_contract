@@ -22,6 +22,7 @@ import (
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
@@ -99,24 +100,8 @@ func TestAPIWithPostgres(t *testing.T) {
 		var created api.ContractResponse
 		decodeResponse(t, createResp, &created)
 		closeBody(t, createResp)
-		if created.ID <= 0 || created.CompanyID != companyID || created.Status != "active" {
+		if created.ID == uuid.Nil || created.CompanyID != companyID || created.Status != "active" {
 			t.Fatalf("unexpected created contract: %+v", created)
-		}
-
-		getResp := sendRequest(
-			t,
-			fiberApp,
-			http.MethodGet,
-			fmt.Sprintf("/api/v2/contracts/%d", created.ID),
-			nil,
-		)
-		requireStatus(t, getResp, http.StatusOK)
-
-		var found api.ContractResponse
-		decodeResponse(t, getResp, &found)
-		closeBody(t, getResp)
-		if found.ID != created.ID || found.ContractNumber != created.ContractNumber {
-			t.Fatalf("unexpected fetched contract: %+v", found)
 		}
 
 		activeResp := sendRequest(
@@ -134,18 +119,16 @@ func TestAPIWithPostgres(t *testing.T) {
 			t.Fatalf("unexpected active contract: %+v", active)
 		}
 
-		upsertBody := fmt.Appendf(nil, `{
-			"contract_id": %d,
-			"services": [{"service_code": "trip_creation", "is_enabled": true}]
-		}`, created.ID)
-		upsertResp := sendRequest(t, fiberApp, http.MethodPut, "/api/v2/services", upsertBody)
-		requireStatus(t, upsertResp, http.StatusOK)
-
-		var upserted api.UpsertServicesResponse
-		decodeResponse(t, upsertResp, &upserted)
-		closeBody(t, upsertResp)
-		if upserted.ContractID != created.ID || len(upserted.Services) != 1 || !upserted.Services[0].IsEnabled {
-			t.Fatalf("unexpected upsert response: %+v", upserted)
+		// Upsert HTTP removed in v2 slim API — enable trip_creation via SQL (same as seed).
+		_, err := pool.Exec(
+			ctx,
+			`INSERT INTO contract_management.contract_services (contract_id, service_code, is_enabled)
+			 VALUES ($1, 'trip_creation', true)
+			 ON CONFLICT (contract_id, service_code) DO UPDATE SET is_enabled = EXCLUDED.is_enabled`,
+			created.ID,
+		)
+		if err != nil {
+			t.Fatalf("seed contract_services: %v", err)
 		}
 
 		availabilityResp := sendRequest(
@@ -216,6 +199,7 @@ func sendRequest(t *testing.T, app *fiber.App, method, path string, body []byte)
 	if err != nil {
 		t.Fatalf("create request: %v", err)
 	}
+	req.Host = "localhost"
 	if body != nil {
 		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	}

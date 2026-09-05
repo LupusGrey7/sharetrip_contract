@@ -11,6 +11,7 @@ import (
 	"job4j/sharetrip-contract/internal/contract/usecase"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 // HTTP component tests for POST /api/v2/contracts/ (handler: create_contract.go).
@@ -23,6 +24,7 @@ import (
 
 func TestCreateContract_HTTP(t *testing.T) {
 	now := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
+	contractID := uuid.MustParse("00000000-0000-0000-0000-000000000005")
 
 	validBody := []byte(`{
 		"company_id": 42,
@@ -43,7 +45,7 @@ func TestCreateContract_HTTP(t *testing.T) {
 			name: "success returns 201",
 			body: validBody,
 			service: stubContractService{createResp: &domain.ContractOutput{
-				ID:             5,
+				ID:             contractID,
 				ContractNumber: "C-42",
 				CompanyID:      42,
 				Status:         domain.ContractStatusActive,
@@ -90,7 +92,6 @@ func TestCreateContract_HTTP(t *testing.T) {
 			srv := &Server{
 				Validator:       validator.New(validator.WithRequiredStructEnabled()),
 				ContractService: tt.service,
-				OfferingService: stubOfferingService{},
 				CompanyService:  &stubCompanyService{},
 			}
 
@@ -105,7 +106,7 @@ func TestCreateContract_HTTP(t *testing.T) {
 			if tt.wantStatus == http.StatusCreated {
 				var got ContractResponse
 				decodeJSON(t, resp, &got)
-				if got.ID != 5 || got.CompanyID != 42 || got.Status != string(domain.ContractStatusActive) {
+				if got.ID != contractID || got.CompanyID != 42 || got.Status != string(domain.ContractStatusActive) {
 					t.Fatalf("unexpected response: %+v", got)
 				}
 				return

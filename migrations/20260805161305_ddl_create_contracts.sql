@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS contract_management.contract_status (
 
 -- create table contracts
 CREATE TABLE IF NOT EXISTS contract_management.contracts (
-    id SERIAL NOT NULL, -- Contract ID
+    id UUID NOT NULL DEFAULT GEN_RANDOM_UUID(), -- Contract ID
     contract_number VARCHAR(32) NOT NULL, -- Contract number
     company_id INT NOT NULL, -- Company ID
     status_id VARCHAR(32) NOT NULL, -- ID Contract Status
@@ -37,16 +37,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_contracts_one_active_per_company
 ON contract_management.contracts (company_id)
 WHERE status_id = 'active'; -- Ключевое бизнес-правило
 
-
 -- Insert data to a table contract_status
 INSERT INTO contract_management.contract_status (id, description, is_editable)
 VALUES ('draft', 'Draft - Договор создан, но не подписан', FALSE) ON CONFLICT (id) DO NOTHING;
 INSERT INTO contract_management.contract_status (id, description, is_editable)
 VALUES ('active', 'Active - Договор подписан и активен', TRUE) ON CONFLICT (id) DO NOTHING;
 INSERT INTO contract_management.contract_status (id, description, is_editable)
-VALUES ('suspended', 'Suspended - Договор приостановлен по инициативе клиента или системы', FALSE) ON CONFLICT (id) DO NOTHING;
+VALUES ('suspended', 'Suspended - Договор приостановлен по инициативе клиента или системы', FALSE) ON CONFLICT (
+    id
+) DO NOTHING;
 INSERT INTO contract_management.contract_status (id, description, is_editable)
-VALUES ('terminated', 'Terminated - Договор прекращен по инициативе клиента или системы', FALSE) ON CONFLICT (id) DO NOTHING;
+VALUES ('terminated', 'Terminated - Договор прекращен по инициативе клиента или системы', FALSE) ON CONFLICT (
+    id
+) DO NOTHING;
 
 -- Add description to a table contract_status
 COMMENT ON TABLE contract_management.contract_status IS 'Статус договора';

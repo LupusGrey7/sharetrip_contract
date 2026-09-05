@@ -38,7 +38,6 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Allowed(t *testing.T) {
 	srv := &Server{
 		Validator:       validator.New(validator.WithRequiredStructEnabled()),
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  company,
 	}
 	app := newRoutesApp(t, srv)
@@ -48,6 +47,7 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Allowed(t *testing.T) {
 		"/api/v2/companies/42/services/trip_creation/availability",
 		nil,
 	)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +77,6 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Allowed(t *testing.T) {
 func TestGetAvailableOfferingByCompanyID_HTTP_200_Denied(t *testing.T) {
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService: &stubCompanyService{
 			resp: &domain.AvailabilityOutput{
 				CompanyID:   42,
@@ -94,6 +93,7 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Denied(t *testing.T) {
 		"/api/v2/companies/42/services/trip_creation/availability",
 		nil,
 	)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -118,7 +118,6 @@ func TestGetAvailableOfferingByCompanyID_HTTP_200_Denied(t *testing.T) {
 func TestGetAvailableOfferingByCompanyID_HTTP_404_Company(t *testing.T) {
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{err: usecase.ErrCompanyNotFound},
 	}
 	app := newRoutesApp(t, srv)
@@ -128,6 +127,7 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Company(t *testing.T) {
 		"/api/v2/companies/99/services/trip_creation/availability",
 		nil,
 	)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -152,7 +152,6 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Company(t *testing.T) {
 func TestGetAvailableOfferingByCompanyID_HTTP_404_Service(t *testing.T) {
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{err: usecase.ErrServiceNotFound},
 	}
 	app := newRoutesApp(t, srv)
@@ -162,6 +161,7 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Service(t *testing.T) {
 		"/api/v2/companies/42/services/trip_creation/availability",
 		nil,
 	)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -186,7 +186,6 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Service(t *testing.T) {
 func TestGetAvailableOfferingByCompanyID_HTTP_400_BadCompanyID(t *testing.T) {
 	srv := &Server{
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{},
 	}
 	app := newRoutesApp(t, srv)
@@ -196,6 +195,7 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_BadCompanyID(t *testing.T) {
 		"/api/v2/companies/abc/services/trip_creation/availability",
 		nil,
 	)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -215,7 +215,6 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_InvalidServiceCode(t *testing.
 	srv := &Server{
 		Validator:       validator.New(validator.WithRequiredStructEnabled()),
 		ContractService: stubContractService{},
-		OfferingService: stubOfferingService{},
 		CompanyService:  &stubCompanyService{},
 	}
 	app := newRoutesApp(t, srv)
@@ -225,6 +224,7 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_InvalidServiceCode(t *testing.
 		"/api/v2/companies/42/services/unknown_code/availability",
 		nil,
 	)
+	req.Host = "localhost"
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)

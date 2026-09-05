@@ -11,6 +11,7 @@ import (
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -37,18 +38,6 @@ func (s *stubContractUseCase) CreateContract(
 	return s.output, nil
 }
 
-func (s *stubContractUseCase) GetContractByID(
-	ctx context.Context,
-	tx pgx.Tx,
-	repo storage.BaseTxContractRepository,
-	input *domain.GetContractByIDInput,
-) (*domain.ContractOutput, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-	return s.output, nil
-}
-
 func (s *stubContractUseCase) GetActiveContractByCompanyID(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -68,7 +57,7 @@ func TestContractService_CreateContract_OK(t *testing.T) {
 
 	uc := &stubContractUseCase{
 		output: &domain.ContractOutput{
-			ID:             7,
+			ID:             uuid.New(),
 			ContractNumber: "C-10-1",
 			CompanyID:      10,
 			Status:         domain.ContractStatusDraft,
@@ -95,7 +84,7 @@ func TestContractService_CreateContract_OK(t *testing.T) {
 	if uc.gotInput == nil || uc.gotInput.CompanyID != 10 {
 		t.Fatalf("use case input: %+v", uc.gotInput)
 	}
-	if got == nil || got.ID != 7 || got.CompanyID != 10 || got.Status != domain.ContractStatusDraft {
+	if got == nil || got.ID == uuid.Nil || got.CompanyID != 10 || got.Status != domain.ContractStatusDraft {
 		t.Fatalf("unexpected response: %+v", got)
 	}
 }

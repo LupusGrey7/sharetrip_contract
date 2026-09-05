@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"time"
 
 	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 	"job4j/sharetrip-contract/internal/storage"
+
+	"go.opentelemetry.io/otel"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -19,12 +21,16 @@ func (u *ContractUseCase) CreateContract(
 	repo storage.BaseTxContractRepository,
 	input *domain.CreateContractInput,
 ) (*domain.ContractOutput, error) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
+	//tracing Jaeger
+	ctxSpc, span := otel.Tracer("TripContractUseCase").Start(ctx, "TripContractUseCase.CreateContract")
+	defer span.End()
+
+	logger := logctx.Logger(ctxSpc).With(
 		slog.String("layer", "useCase"),
 		slog.String("useCase", "CreateContract"),
 		slog.Int("company_id", input.CompanyID),
 	)
-	logger.Debug("CreateContract started")
+	logger.Debug("create contract usecase started")
 
 	if input.EndDate.Before(input.StartDate) {
 		return nil, fmt.Errorf("%w: end_date before start_date", ErrInvalidRequest)
@@ -48,10 +54,10 @@ func (u *ContractUseCase) CreateContract(
 		EndDate:        input.EndDate,
 	})
 	if err != nil {
-		logger.Error("CreateContract failed", slog.Any("error", err))
+		logger.Error("repository create contract failed", slog.Any("error", err))
 		return nil, err
 	}
 
-	logger.Debug("CreateContract completed", slog.Int("contract_id", entity.ID))
+	logger.Debug("create contract usecase completed", slog.String("contract_id", entity.ID.String()))
 	return domain.ContractEntityToOutput(entity), nil
 }

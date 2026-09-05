@@ -2,41 +2,53 @@ package api
 
 import (
 	"log/slog"
-	"os"
 	"strconv"
 
+	"job4j/sharetrip-contract/internal/observability/logctx"
+
 	"github.com/gofiber/fiber/v2"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-func (s *Server) GetActiveContractByCompanyID(ctx *fiber.Ctx) error {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
-		slog.String("layer", "http"),
+func (s *Server) GetActiveContractByCompanyID(c *fiber.Ctx) error {
+	tracer := otel.Tracer("contract-api")
+	ctx, span := tracer.Start(c.UserContext(), "GetActiveContractByCompanyIDHandler")
+	traceID := span.SpanContext().TraceID().String()
+	defer span.End()
+
+	logger := logctx.Logger(ctx).With(
+		slog.String("server", "ContractServer"),
 		slog.String("handler", "GetActiveContractByCompanyID"),
+		slog.String("trace_id", traceID),
 	)
-	logger.Debug("GetActiveContractByCompanyID http started")
 
 	var req GetActiveContractByCompanyIDRequest
-	if err := ctx.QueryParser(&req); err != nil {
+	if err := c.QueryParser(&req); err != nil {
 		logger.Warn("get active contract failed: invalid query", slog.Any("error", err))
 		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
 	}
 	if s.Validator != nil {
 		if err := s.Validator.Struct(&req); err != nil {
-			logger.Error("get active contract failed: invalid request", slog.Any("error", err))
+			logger.Warn("get active contract failed: invalid request", slog.Any("error", err))
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	}
 
+	span.SetAttributes(attribute.Int("company_id", req.CompanyID))
+	ctx = logctx.WithLogger(ctx, logger)
+	logger.Debug("GetActiveContractByCompanyID started")
+
 	resp, err := s.ContractService.GetActiveContractByCompanyID(
-		ctx.UserContext(),
+		ctx,
 		toGetActiveContractByCompanyIDInput(&req),
 	)
 	if err != nil {
 		logger.Error("get active contract failed", slog.Any("error", err))
-		return HandleError(ctx, err)
+		return HandleError(c, err)
 	}
 
 	out := toContractResponse(resp)
 	logger.Debug("get active contract completed", slog.String("company_id", strconv.Itoa(req.CompanyID)))
-	return ctx.Status(fiber.StatusOK).JSON(out)
+	return c.Status(fiber.StatusOK).JSON(out)
 }

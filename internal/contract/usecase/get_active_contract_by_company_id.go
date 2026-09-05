@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 
 	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 	"job4j/sharetrip-contract/internal/storage"
 
 	"github.com/jackc/pgx/v5"
+	"go.opentelemetry.io/otel"
 )
 
 func (u *ContractUseCase) GetActiveContractByCompanyID(
@@ -18,14 +19,17 @@ func (u *ContractUseCase) GetActiveContractByCompanyID(
 	repo storage.BaseTxContractRepository,
 	input *domain.GetActiveContractByCompanyIDInput,
 ) (*domain.ContractOutput, error) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
+	ctxSpc, span := otel.Tracer("ContractUseCase").Start(ctx, "ContractUseCase.GetActiveContractByCompanyID")
+	defer span.End()
+
+	logger := logctx.Logger(ctxSpc).With(
 		slog.String("layer", "useCase"),
 		slog.String("useCase", "GetActiveContractByCompanyID"),
 		slog.Int("company_id", input.CompanyID),
 	)
 	logger.Debug("GetActiveContractByCompanyID started")
 
-	entity, err := repo.GetActiveContractByCompanyIDTx(ctx, tx, input.CompanyID)
+	entity, err := repo.GetActiveContractByCompanyIDTx(ctxSpc, tx, input.CompanyID)
 	if err != nil {
 		logger.Error("GetActiveContractByCompanyID failed", slog.Any("error", err))
 		if errors.Is(err, storage.ErrContractNotFound) {

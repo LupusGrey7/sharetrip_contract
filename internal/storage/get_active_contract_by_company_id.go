@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 
 	"job4j/sharetrip-contract/internal/contract/domain"
+	"job4j/sharetrip-contract/internal/observability/logctx"
 
 	"github.com/jackc/pgx/v5"
+	"go.opentelemetry.io/otel"
 )
 
 const getActiveContractByCompanyID = `
@@ -23,13 +24,16 @@ func (r *ContractRepository) GetActiveContractByCompanyIDTx(
 	tx pgx.Tx,
 	companyID int,
 ) (*domain.ContractEntity, error) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With(
+	ctxSpc, span := otel.Tracer("ContractRepository").Start(ctx, "ContractRepository.GetActiveContractByCompanyIDTx")
+	defer span.End()
+
+	logger := logctx.Logger(ctxSpc).With(
 		slog.String("layer", "repository"),
 		slog.String("repository", "GetActiveContractByCompanyIDTx"),
 		slog.Int("company_id", companyID),
 	)
 
-	contract, err := scanContractRow(tx.QueryRow(ctx, getActiveContractByCompanyID, companyID))
+	contract, err := scanContractRow(tx.QueryRow(ctxSpc, getActiveContractByCompanyID, companyID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrContractNotFound

@@ -8,6 +8,7 @@ const (
 	errSelectEntityFailed = "error selecting entity: %w"
 	errContractNotFound   = "contract not found"
 	errCompanyNotFound    = "company not found"
+	ErrCreatingContract    = "error creating contract"
 )
 
 var (

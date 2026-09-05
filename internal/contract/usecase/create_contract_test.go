@@ -10,23 +10,13 @@ import (
 	"job4j/sharetrip-contract/internal/contract/usecase"
 	"job4j/sharetrip-contract/internal/storage"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
 type stubContractRepo struct {
 	contract *domain.ContractEntity
 	err      error
-}
-
-func (s stubContractRepo) GetContractByIDTx(ctx context.Context, tx pgx.Tx, id int) (*domain.ContractEntity, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-	return s.contract, nil
-}
-
-func (s stubContractRepo) GetContractByIDForUpdateTx(ctx context.Context, tx pgx.Tx, id int) (*domain.ContractEntity, error) {
-	return s.GetContractByIDTx(ctx, tx, id)
 }
 
 func (s stubContractRepo) GetActiveContractByCompanyIDTx(
@@ -45,7 +35,7 @@ func (s stubContractRepo) CreateContractTx(ctx context.Context, tx pgx.Tx, contr
 		return nil, s.err
 	}
 	out := *contract
-	out.ID = 42
+	out.ID = uuid.New()
 	out.CreatedAt = time.Now()
 	out.UpdatedAt = out.CreatedAt
 	return &out, nil
@@ -64,7 +54,7 @@ func TestCreateContract_OK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != 42 {
+	if got.ID == uuid.Nil {
 		t.Fatalf("id = %d, want 42", got.ID)
 	}
 	if got.Status != domain.ContractStatusDraft {
@@ -90,19 +80,6 @@ func TestCreateContract_InvalidDates(t *testing.T) {
 	}
 }
 
-func TestGetContractByID_NotFound(t *testing.T) {
-	uc := usecase.NewContractUseCase()
-	_, err := uc.GetContractByID(
-		context.Background(),
-		nil,
-		stubContractRepo{err: storage.ErrContractNotFound},
-		&domain.GetContractByIDInput{ContractID: 1},
-	)
-	if !errors.Is(err, usecase.ErrContractNotFound) {
-		t.Fatalf("got %v, want ErrContractNotFound", err)
-	}
-}
-
 func TestGetActiveContractByCompanyID_OK(t *testing.T) {
 	uc := usecase.NewContractUseCase()
 	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -110,7 +87,7 @@ func TestGetActiveContractByCompanyID_OK(t *testing.T) {
 		context.Background(),
 		nil,
 		stubContractRepo{contract: &domain.ContractEntity{
-			ID:        5,
+			ID:        uuid.New(),
 			CompanyID: 42,
 			Status:    domain.ContractStatusActive,
 			StartDate: now,
@@ -121,7 +98,7 @@ func TestGetActiveContractByCompanyID_OK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != 5 || got.CompanyID != 42 || got.Status != domain.ContractStatusActive {
+	if got.ID == uuid.Nil || got.CompanyID != 42 || got.Status != domain.ContractStatusActive {
 		t.Fatalf("unexpected: %+v", got)
 	}
 }

@@ -11,7 +11,7 @@ import (
 // Config contains all process-level application settings.
 type Config struct {
 	Environment string `env:"ENV" env-default:"development"`
-	HTTPPort    string `env:"HTTP_PORT" env-default:"8080"`
+	HTTPPort    string `env:"HTTP_PORT" env-default:"8082"`
 	Database    DatabaseConfig
 }
 

@@ -26,7 +26,7 @@ func (s stubInfoUseCase) GetHealthcheckInfo(ctx context.Context) (*domain.Health
 func newTestApp(t *testing.T, uc stubInfoUseCase) *fiber.App {
 	t.Helper()
 	healthcheckSvc := service.NewHealthcheckService(uc)
-	srv := NewServer(nil, healthcheckSvc, nil, nil, nil)
+	srv := NewServer(nil, healthcheckSvc, nil, nil)
 	fiberApp := fiber.New()
 	srv.SetupRoutes(fiberApp)
 	return fiberApp
@@ -41,6 +41,7 @@ func TestHealthcheck_OK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Host = "localhost"
 	resp, err := fiberApp.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
@@ -74,6 +75,7 @@ func TestHealthcheck_DBDown_Returns503(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Host = "localhost"
 	resp, err := fiberApp.Test(req, -1)
 	if err != nil {
 		t.Fatal(err)
