@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // HTTP DTO = OpenAPI / JSON / path params on the API boundary.
@@ -13,7 +14,10 @@ type CreateContractRequest struct {
 	ContractNumber string    `json:"contract_number" validate:"omitempty,min=1"`
 	Status         string    `json:"status" validate:"omitempty,oneof=draft active suspended terminated"`
 	StartDate      time.Time `json:"start_date" validate:"required"`
-	EndDate        time.Time `json:"end_date" validate:"required"`
+	ExpiateAt      time.Time `json:"expired_at" validate:"required"`
+}
+type CreateContractResponse struct {
+	ContractResponse ContractResponse `json:"contract"`
 }
 
 type ContractResponse struct {
@@ -22,7 +26,7 @@ type ContractResponse struct {
 	CompanyID      int       `json:"company_id"`
 	Status         string    `json:"status"`
 	StartDate      time.Time `json:"start_date"`
-	EndDate        time.Time `json:"end_date"`
+	ExpiateAt      time.Time `json:"expired_at"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
@@ -30,6 +34,23 @@ type ContractResponse struct {
 type HealthcheckResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+type SignContractRequest struct {
+	ContractForSignature ContractForSignature `json:" sign_contract"`
+}
+type ContractForSignature struct {
+	ID             uuid.UUID `json:"id" db:"id" validate:"required"`
+	ContractNumber string    `json:"contract_number" validate:"omitempty,min=5"`
+	CompanyID      int       `json:"company_id" validate:"required,min=5"`
+	ClientID       uuid.UUID `json:"client_id" validate:"required"`
+	StartDate      time.Time `json:"start_date" validate:"required"`
+	ExpiateAt      time.Time `json:"expired_at" validate:"required"`
+	CreatedAt      time.Time `json:"created_at" validate:"required"`
+	UpdatedAt      time.Time `json:"updated_at" validate:"required"`
+}
+type SignContractResponse struct {
+	ContractResponse ContractResponse `json:"contract"`
 }
 
 type ErrorResponse struct {

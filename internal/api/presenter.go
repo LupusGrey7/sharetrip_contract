@@ -32,7 +32,7 @@ func toContractResponse(output *domain.ContractOutput) *ContractResponse {
 		CompanyID:      output.CompanyID,
 		Status:         string(output.Status),
 		StartDate:      output.StartDate,
-		EndDate:        output.EndDate,
+		ExpiateAt:      output.EndDate,
 		CreatedAt:      output.CreatedAt,
 		UpdatedAt:      output.UpdatedAt,
 	}

@@ -46,6 +46,14 @@ else
 endif
 
 # ============================================================
+# OPEN API Generator (https://openapi-generator.tech/) — for generating client code from OpenAPI spec
+# ============================================================
+OAPI_CODEGEN_VERSION := v2.8.0
+GOEXE := $(shell go env GOEXE)
+OAPI_CODEGEN_BIN := bin/oapi-codegen$(GOEXE)
+OAPI_CODEGEN := ./$(OAPI_CODEGEN_BIN)
+export GOBIN := $(CURDIR)/bin
+# ============================================================
 # Important Variables
 # ============================================================
 GO := go
@@ -95,6 +103,8 @@ help:
 	@echo "  vulncheck       	 					- run vulnerability detection tool"
 	@echo "  all         	 						- run all checks: lint, tests, coverage, vulnerability detection"
 	@echo "  yaml-check     	 					- run yaml check tool"
+	@echo "  tools    	 							- setup oapi-codegen in the local bin"
+	@echo "  generate    	 						- generate code from OpenAPI spec"
 	@echo "  info                       				 	- show information about the OS and yq"
 	@echo "  help                        					- show this help"
 	@echo "  env-default                 					- reset profile to default (APP_ENV=dev → .env.dev)"
@@ -324,3 +334,16 @@ else
 endif
 
 # DETECTED_OS: Windows | Linux | Darwin — для yaml-check и info
+
+# ============================================================
+# Task - tools generate generate-api
+# ============================================================
+.PHONY: tools generate generate-api run
+tools: $(OAPI_CODEGEN_BIN)
+$(OAPI_CODEGEN_BIN):
+	go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
+
+generate: generate-api
+
+generate-api: $(OAPI_CODEGEN_BIN)
+	$(OAPI_CODEGEN) --config api/openapi.codegen.yaml api/contract.yaml
