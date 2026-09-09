@@ -11,8 +11,16 @@ func toCreateContractInput(r *CreateContractRequest) *domain.CreateContractInput
 		ContractNumber: r.ContractNumber,
 		Status:         domain.ContractStatus(r.Status),
 		StartDate:      r.StartDate,
-		EndDate:        r.EndDate,
+		EndDate:        r.ExpiateAt,
 	}
+}
+
+func toCreateContractResponse(output *domain.ContractOutput) *CreateContractResponse {
+	contract := toContractResponse(output)
+	if contract == nil {
+		return nil
+	}
+	return &CreateContractResponse{ContractResponse: *contract}
 }
 
 func toGetActiveContractByCompanyIDInput(r *GetActiveContractByCompanyIDRequest) *domain.GetActiveContractByCompanyIDInput {

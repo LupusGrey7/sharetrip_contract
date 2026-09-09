@@ -11,6 +11,7 @@ import (
 
 type CreateContractRequest struct {
 	CompanyID      int       `json:"company_id" validate:"required,min=1"`
+	ClientID       uuid.UUID `json:"client_id" validate:"required"`
 	ContractNumber string    `json:"contract_number" validate:"omitempty,min=1"`
 	Status         string    `json:"status" validate:"omitempty,oneof=draft active suspended terminated"`
 	StartDate      time.Time `json:"start_date" validate:"required"`
@@ -37,7 +38,7 @@ type HealthcheckResponse struct {
 }
 
 type SignContractRequest struct {
-	ContractForSignature ContractForSignature `json:" sign_contract"`
+	ContractForSignature ContractForSignature `json:"sign_contract" validate:"required"`
 }
 type ContractForSignature struct {
 	ID             uuid.UUID `json:"id" db:"id" validate:"required"`

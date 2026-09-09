@@ -89,19 +89,21 @@ func TestAPIWithPostgres(t *testing.T) {
 
 		createBody := []byte(`{
 			"company_id": 870001,
+			"client_id": "22222222-2222-2222-2222-222222222222",
 			"contract_number": "IT-CONTRACT-870001",
 			"status": "active",
 			"start_date": "2026-01-01T00:00:00Z",
-			"end_date": "2027-01-01T00:00:00Z"
+			"expired_at": "2027-01-01T00:00:00Z"
 		}`)
 		createResp := sendRequest(t, fiberApp, http.MethodPost, "/api/v2/contracts/", createBody)
 		requireStatus(t, createResp, http.StatusCreated)
 
-		var created api.ContractResponse
-		decodeResponse(t, createResp, &created)
+		var createdWrap api.CreateContractResponse
+		decodeResponse(t, createResp, &createdWrap)
 		closeBody(t, createResp)
+		created := createdWrap.ContractResponse
 		if created.ID == uuid.Nil || created.CompanyID != companyID || created.Status != "active" {
-			t.Fatalf("unexpected created contract: %+v", created)
+			t.Fatalf("unexpected created contract: %+v", createdWrap)
 		}
 
 		activeResp := sendRequest(

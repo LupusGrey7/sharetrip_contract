@@ -28,10 +28,11 @@ func TestCreateContract_HTTP(t *testing.T) {
 
 	validBody := []byte(`{
 		"company_id": 42,
+		"client_id": "11111111-1111-1111-1111-111111111111",
 		"contract_number": "C-42",
 		"status": "active",
 		"start_date": "2026-01-01T00:00:00Z",
-		"end_date": "2027-01-01T00:00:00Z"
+		"expired_at": "2027-01-01T00:00:00Z"
 	}`)
 
 	tests := []struct {
@@ -104,9 +105,10 @@ func TestCreateContract_HTTP(t *testing.T) {
 			}
 
 			if tt.wantStatus == http.StatusCreated {
-				var got ContractResponse
+				var got CreateContractResponse
 				decodeJSON(t, resp, &got)
-				if got.ID != contractID || got.CompanyID != 42 || got.Status != string(domain.ContractStatusActive) {
+				c := got.ContractResponse
+				if c.ID != contractID || c.CompanyID != 42 || c.Status != string(domain.ContractStatusActive) {
 					t.Fatalf("unexpected response: %+v", got)
 				}
 				return

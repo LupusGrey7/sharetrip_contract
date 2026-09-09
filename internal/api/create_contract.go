@@ -41,7 +41,7 @@ func (s *Server) CreateContract(c *fiber.Ctx) error {
 		return HandleError(c, err)
 	}
 
-	out := toContractResponse(resp)
-	logger.Debug("CreateContract completed", slog.String("contract_id", out.ID.String()))
+	out := toCreateContractResponse(resp)
+	logger.Debug("CreateContract completed", slog.String("contract_id", out.ContractResponse.ID.String()))
 	return c.Status(fiber.StatusCreated).JSON(out)
 }
