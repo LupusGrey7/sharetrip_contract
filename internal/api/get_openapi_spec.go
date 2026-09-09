@@ -9,7 +9,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Swagger 2.0 leftover (no longer in contract.yaml).
 var openAPIHostLine = regexp.MustCompile(`(?m)^host:\s*".*"$`)
+
+// OpenAPI 3.x: first servers[].url with localhost (local Try it out).
+var openAPILocalServerURL = regexp.MustCompile(`(?m)^(\s*-\s*url:\s*)https?://localhost:\d+/api/v2\s*$`)
 
 // candidate paths: make run from repo root, or binary started from cmd/, build/, etc.
 func openAPISpecCandidates() []string {
@@ -36,7 +40,7 @@ func (s *Server) GetOpenAPISpec(ctx *fiber.Ctx) error {
 			continue
 		}
 		logger.Debug("openapi spec served", slog.String("path", path))
-		data = patchOpenAPIHost(data, ctx.Get("Host"))
+		data = patchOpenAPIServer(data, ctx.Get("Host"))
 		ctx.Set(fiber.HeaderContentType, "application/yaml; charset=utf-8")
 		return ctx.Status(fiber.StatusOK).Send(data)
 	}
@@ -48,10 +52,16 @@ func (s *Server) GetOpenAPISpec(ctx *fiber.Ctx) error {
 	})
 }
 
-// patchOpenAPIHost rewrites swagger 2.0 host so Try it out hits the running app (ctx.Host()).
-func patchOpenAPIHost(yaml []byte, host string) []byte {
-	if host == "" || !openAPIHostLine.Match(yaml) {
+// patchOpenAPIServer rewrites local server URL (OAS3) or host (Swagger 2) so Try it out hits the running app.
+func patchOpenAPIServer(yaml []byte, host string) []byte {
+	if host == "" {
 		return yaml
 	}
-	return openAPIHostLine.ReplaceAll(yaml, []byte(`host: "`+host+`"`))
+	if openAPILocalServerURL.Match(yaml) {
+		return openAPILocalServerURL.ReplaceAll(yaml, []byte("${1}http://"+host+"/api/v2"))
+	}
+	if openAPIHostLine.Match(yaml) {
+		return openAPIHostLine.ReplaceAll(yaml, []byte(`host: "`+host+`"`))
+	}
+	return yaml
 }
