@@ -1,33 +1,64 @@
 package api
 
-import "job4j/sharetrip-contract/internal/contract/domain"
+import (
+	"job4j/sharetrip-contract/gen"
+	"job4j/sharetrip-contract/internal/contract/domain"
 
-func toCreateContractInput(r *CreateContractRequest) *domain.CreateContractInput {
+	openapi_types "github.com/oapi-codegen/runtime/types"
+)
+
+func toCreateContractInput(r *gen.CreateContractRequest) *domain.CreateContractInput {
 	if r == nil {
 		return nil
+	}
+	status := domain.ContractStatus("")
+	if r.Status != nil {
+		status = domain.ContractStatus(*r.Status)
+	}
+	contractNumber := ""
+	if r.ContractNumber != nil {
+		contractNumber = *r.ContractNumber
 	}
 	return &domain.CreateContractInput{
-		CompanyID:      r.CompanyID,
-		ContractNumber: r.ContractNumber,
-		Status:         domain.ContractStatus(r.Status),
+		CompanyID:      int(r.CompanyId),
+		ContractNumber: contractNumber,
+		Status:         status,
 		StartDate:      r.StartDate,
-		EndDate:        r.ExpiateAt,
+		EndDate:        r.ExpiredAt,
 	}
 }
 
-func toCreateContractResponse(output *domain.ContractOutput) *CreateContractResponse {
-	contract := toContractResponse(output)
-	if contract == nil {
+func toCreateContractResponse(output *domain.ContractOutput) *gen.CreateContractResponse {
+	if output == nil {
 		return nil
 	}
-	return &CreateContractResponse{ContractResponse: *contract}
+	id := openapi_types.UUID(output.ID)
+	companyID := int64(output.CompanyID)
+	contractNumber := output.ContractNumber
+	status := gen.ContractStatus(output.Status)
+	start := output.StartDate
+	expired := output.EndDate
+	created := output.CreatedAt
+	updated := output.UpdatedAt
+	return &gen.CreateContractResponse{
+		Contract: gen.ContractResponse{
+			Id:             &id,
+			CompanyId:      &companyID,
+			ContractNumber: &contractNumber,
+			Status:         &status,
+			StartDate:      &start,
+			ExpiredAt:      &expired,
+			CreatedAt:      &created,
+			UpdatedAt:      &updated,
+		},
+	}
 }
 
-func toGetActiveContractByCompanyIDInput(r *GetActiveContractByCompanyIDRequest) *domain.GetActiveContractByCompanyIDInput {
+func toGetActiveContractByCompanyIDInput(r *gen.GetActiveContractByCompanyIdParams) *domain.GetActiveContractByCompanyIDInput {
 	if r == nil {
 		return nil
 	}
-	return &domain.GetActiveContractByCompanyIDInput{CompanyID: r.CompanyID}
+	return &domain.GetActiveContractByCompanyIDInput{CompanyID: int(r.CompanyId)}
 }
 
 func toContractResponse(output *domain.ContractOutput) *ContractResponse {
