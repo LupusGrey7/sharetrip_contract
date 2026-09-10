@@ -140,6 +140,8 @@ paths:
             type: integer
             format: int64
             minimum: 1
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
       responses:
         "200":
           description: OK
@@ -404,6 +406,8 @@ paths:
             format: int64
             minimum: 1
           example: 42
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
         - name: serviceCode
           in: path
           description: Stable business service code, e.g. trip_creation
@@ -417,6 +421,8 @@ paths:
               - notifications
               - premium_support
           example: trip_creation
+          x-oapi-codegen-extra-tags:
+            validate: "required,oneof=trip_start trip_creation trip_participants notifications premium_support"
       responses:
         "200":
           description: |
@@ -498,25 +504,39 @@ components:
           type: string
           minLength: 1
           description: Business contract number
+          # go-playground/validator tags → gen struct (oapi-codegen)
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         company_id:
           type: integer
           format: int64
           minimum: 1
           description: Company ID
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
         client_id:
           type: string
           format: uuid
           description: Client ID
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         status:
-          $ref: "#/components/schemas/ContractStatus"
+          allOf:
+            - $ref: "#/components/schemas/ContractStatus"
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,oneof=draft active suspended terminated"
         start_date:
           type: string
           format: date-time
           description: Contract start date
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         expired_at:
           type: string
           format: date-time
           description: Contract expiration date
+          x-oapi-codegen-extra-tags:
+            validate: "required"
       additionalProperties: false
 
     ContractStatusRequest:
@@ -525,7 +545,10 @@ components:
         - status
       properties:
         status:
-          $ref: "#/components/schemas/ContractStatus"
+          allOf:
+            - $ref: "#/components/schemas/ContractStatus"
+          x-oapi-codegen-extra-tags:
+            validate: "required"
 
     CreateContractResponse:
       type: object
@@ -576,41 +599,68 @@ components:
         - sign_contract
       properties:
         sign_contract:
-          $ref: "#/components/schemas/ContractForSignature"
+          allOf:
+            - $ref: "#/components/schemas/ContractForSignature"
+          x-oapi-codegen-extra-tags:
+            validate: "required"
 
     ContractForSignature:
       type: object
       description: Contract data needed for signing
+      required:
+        - id
+        - client_id
+        - company_id
+        - start_date
+        - expired_at
+        - created_at
+        - updated_at
       properties:
         id:
           type: string
           format: uuid
           description: Internal contract ID
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         client_id:
           type: string
           format: uuid
           description: Client ID
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         contract_number:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=5"
         company_id:
           type: integer
           format: int64
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=5"
         start_date:
           type: string
           format: date-time
           nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         created_at:
           type: string
           format: date-time
           nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         updated_at:
-            type: string
-            format: date-time
-            nullable: true
+          type: string
+          format: date-time
+          nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
         expired_at:
           type: string
           format: date-time
           nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
 
     SignContractResponse:
       type: object
@@ -672,6 +722,26 @@ components:
         status:
           $ref: "#/components/schemas/ContractStatus"
 
+    UpsertServicesRequest:
+      type: object
+      required:
+        - contract_id
+        - services
+      properties:
+        contract_id:
+          type: string
+          format: uuid
+          description: Contract whose service list is updated
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        services:
+          type: array
+          description: Full list of services to add/update for the contract
+          items:
+            $ref: "#/components/schemas/ServiceItem"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
     ServiceItem:
       type: object
       required:
@@ -688,27 +758,13 @@ components:
             - premium_support
           description: Business service code
           example: trip_creation
+          x-oapi-codegen-extra-tags:
+            validate: "required,oneof=trip_start trip_creation trip_participants notifications premium_support"
         is_enabled:
           type: boolean
           default: false
           description: Whether this service is enabled for the contract
           example: false
-
-    UpsertServicesRequest:
-      type: object
-      required:
-        - contract_id
-        - services
-      properties:
-        contract_id:
-          type: string
-          format: uuid
-          description: Contract whose service list is updated
-        services:
-          type: array
-          description: Full list of services to add/update for the contract
-          items:
-            $ref: "#/components/schemas/ServiceItem"
 
     UpsertServicesResponse:
       type: object
