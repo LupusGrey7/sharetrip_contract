@@ -184,9 +184,10 @@ func TestGetAvailableOfferingByCompanyID_HTTP_404_Service(t *testing.T) {
 }
 
 func TestGetAvailableOfferingByCompanyID_HTTP_400_BadCompanyID(t *testing.T) {
+	company := &stubCompanyService{}
 	srv := &Server{
 		ContractService: stubContractService{},
-		CompanyService:  &stubCompanyService{},
+		CompanyService:  company,
 	}
 	app := newRoutesApp(t, srv)
 
@@ -209,13 +210,50 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_BadCompanyID(t *testing.T) {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
 	}
+	if company.got != nil {
+		t.Fatalf("service must not be called, got input: %+v", company.got)
+	}
 }
 
-func TestGetAvailableOfferingByCompanyID_HTTP_400_InvalidServiceCode(t *testing.T) {
+func TestGetAvailableOfferingByCompanyID_HTTP_400_CompanyIDBelowMinimum(t *testing.T) {
+	company := &stubCompanyService{}
 	srv := &Server{
 		Validator:       validator.New(validator.WithRequiredStructEnabled()),
 		ContractService: stubContractService{},
-		CompanyService:  &stubCompanyService{},
+		CompanyService:  company,
+	}
+	app := newRoutesApp(t, srv)
+
+	req, _ := http.NewRequest(
+		http.MethodGet,
+		"/api/v2/companies/0/services/trip_creation/availability",
+		nil,
+	)
+	req.Host = "localhost"
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	if resp.StatusCode != http.StatusBadRequest {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
+	}
+	if company.got != nil {
+		t.Fatalf("service must not be called, got input: %+v", company.got)
+	}
+}
+
+func TestGetAvailableOfferingByCompanyID_HTTP_400_InvalidServiceCode(t *testing.T) {
+	company := &stubCompanyService{}
+	srv := &Server{
+		Validator:       validator.New(validator.WithRequiredStructEnabled()),
+		ContractService: stubContractService{},
+		CompanyService:  company,
 	}
 	app := newRoutesApp(t, srv)
 
@@ -237,5 +275,8 @@ func TestGetAvailableOfferingByCompanyID_HTTP_400_InvalidServiceCode(t *testing.
 	if resp.StatusCode != http.StatusBadRequest {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("status=%d body=%s", resp.StatusCode, b)
+	}
+	if company.got != nil {
+		t.Fatalf("service must not be called, got input: %+v", company.got)
 	}
 }

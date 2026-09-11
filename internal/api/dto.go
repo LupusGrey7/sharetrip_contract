@@ -39,8 +39,7 @@ type AvailabilityResult struct {
 	Reason      string `json:"reason,omitempty"`
 }
 
-// GetAvailableOfferingByCompanyIDRequest — path args from RegisterHandlers are separate
-// method params (no gen struct). Same validate rules as YAML / former dto.
+// GetAvailableOfferingByCompanyIDRequest validates path values already bound by the generated wrapper.
 type GetAvailableOfferingByCompanyIDRequest struct {
 	CompanyID   int    `validate:"required,min=1"`
 	ServiceCode string `validate:"required,oneof=trip_start trip_creation trip_participants notifications premium_support"`
