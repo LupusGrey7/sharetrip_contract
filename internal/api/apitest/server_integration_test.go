@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"job4j/sharetrip-contract/gen"
 	"job4j/sharetrip-contract/internal/api"
 	application "job4j/sharetrip-contract/internal/app"
 	"job4j/sharetrip-contract/internal/storage"
@@ -95,16 +96,20 @@ func TestAPIWithPostgres(t *testing.T) {
 			"start_date": "2026-01-01T00:00:00Z",
 			"expired_at": "2027-01-01T00:00:00Z"
 		}`)
-		createResp := sendRequest(t, fiberApp, http.MethodPost, "/api/v2/contracts/", createBody)
+		createResp := sendRequest(t, fiberApp, http.MethodPost, "/api/v2/contracts", createBody)
 		requireStatus(t, createResp, http.StatusCreated)
 
-		var createdWrap api.CreateContractResponse
+		var createdWrap gen.CreateContractResponse
 		decodeResponse(t, createResp, &createdWrap)
 		closeBody(t, createResp)
-		created := createdWrap.ContractResponse
-		if created.ID == uuid.Nil || created.CompanyID != companyID || created.Status != "active" {
+		created := createdWrap.Contract
+		if created.Id == nil || *created.Id == uuid.Nil || created.CompanyId == nil || int(*created.CompanyId) != companyID {
 			t.Fatalf("unexpected created contract: %+v", createdWrap)
 		}
+		if created.Status == nil || string(*created.Status) != "active" {
+			t.Fatalf("unexpected created status: %+v", createdWrap)
+		}
+		createdID := uuid.UUID(*created.Id)
 
 		activeResp := sendRequest(
 			t,
@@ -117,7 +122,7 @@ func TestAPIWithPostgres(t *testing.T) {
 		var active api.ContractResponse
 		decodeResponse(t, activeResp, &active)
 		closeBody(t, activeResp)
-		if active.ID != created.ID || active.Status != "active" || active.CompanyID != companyID {
+		if active.ID != createdID || active.Status != "active" || active.CompanyID != companyID {
 			t.Fatalf("unexpected active contract: %+v", active)
 		}
 
@@ -127,7 +132,7 @@ func TestAPIWithPostgres(t *testing.T) {
 			`INSERT INTO contract_management.contract_services (contract_id, service_code, is_enabled)
 			 VALUES ($1, 'trip_creation', true)
 			 ON CONFLICT (contract_id, service_code) DO UPDATE SET is_enabled = EXCLUDED.is_enabled`,
-			created.ID,
+			createdID,
 		)
 		if err != nil {
 			t.Fatalf("seed contract_services: %v", err)
