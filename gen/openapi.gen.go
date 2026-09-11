@@ -180,16 +180,16 @@ type AvailabilityResultServiceCode string
 // ContractForSignature Contract data needed for signing
 type ContractForSignature struct {
 	// ClientId Client ID
-	ClientId       *openapi_types.UUID `json:"client_id,omitempty"`
-	CompanyId      *int64              `json:"company_id,omitempty"`
-	ContractNumber *string             `json:"contract_number,omitempty"`
-	CreatedAt      *time.Time          `json:"created_at,omitempty"`
-	ExpiredAt      *time.Time          `json:"expired_at,omitempty"`
+	ClientId       openapi_types.UUID `json:"client_id" validate:"required"`
+	CompanyId      int64              `json:"company_id" validate:"required,min=5"`
+	ContractNumber *string            `json:"contract_number,omitempty" validate:"omitempty,min=5"`
+	CreatedAt      *time.Time         `json:"created_at" validate:"required"`
+	ExpiredAt      *time.Time         `json:"expired_at" validate:"required"`
 
 	// Id Internal contract ID
-	Id        *openapi_types.UUID `json:"id,omitempty"`
-	StartDate *time.Time          `json:"start_date,omitempty"`
-	UpdatedAt *time.Time          `json:"updated_at,omitempty"`
+	Id        openapi_types.UUID `json:"id" validate:"required"`
+	StartDate *time.Time         `json:"start_date" validate:"required"`
+	UpdatedAt *time.Time         `json:"updated_at" validate:"required"`
 }
 
 // ContractResponse Full contract representation
@@ -213,8 +213,7 @@ type ContractStatus string
 
 // ContractStatusRequest defines model for ContractStatusRequest.
 type ContractStatusRequest struct {
-	// Status Contract status
-	Status ContractStatus `json:"status"`
+	Status ContractStatus `json:"status" validate:"required"`
 }
 
 // ContractStatusUpdateResponse defines model for ContractStatusUpdateResponse.
@@ -234,22 +233,20 @@ type ContractUpdateStatusResponse struct {
 // CreateContractRequest defines model for CreateContractRequest.
 type CreateContractRequest struct {
 	// ClientId Client ID
-	ClientId openapi_types.UUID `json:"client_id"`
+	ClientId openapi_types.UUID `json:"client_id" validate:"required"`
 
 	// CompanyId Company ID
-	CompanyId int64 `json:"company_id"`
+	CompanyId int64 `json:"company_id" validate:"required,min=1"`
 
 	// ContractNumber Business contract number
-	ContractNumber *string `json:"contract_number,omitempty"`
+	ContractNumber *string `json:"contract_number,omitempty" validate:"omitempty,min=1"`
 
 	// ExpiredAt Contract expiration date
-	ExpiredAt time.Time `json:"expired_at"`
+	ExpiredAt time.Time `json:"expired_at" validate:"required"`
 
 	// StartDate Contract start date
-	StartDate time.Time `json:"start_date"`
-
-	// Status Contract status
-	Status *ContractStatus `json:"status,omitempty"`
+	StartDate time.Time       `json:"start_date" validate:"required"`
+	Status    *ContractStatus `json:"status,omitempty" validate:"omitempty,oneof=draft active suspended terminated"`
 }
 
 // CreateContractResponse Full contract representation
@@ -280,7 +277,7 @@ type ServiceItem struct {
 	// ServiceCode Business service code
 	//
 	// Example: trip_creation
-	ServiceCode ServiceItemServiceCode `json:"service_code"`
+	ServiceCode ServiceItemServiceCode `json:"service_code" validate:"required,oneof=trip_start trip_creation trip_participants notifications premium_support"`
 }
 
 // ServiceItemServiceCode Business service code
@@ -290,8 +287,7 @@ type ServiceItemServiceCode string
 
 // SignContractRequest Request for signing a contract
 type SignContractRequest struct {
-	// SignContract Contract data needed for signing
-	SignContract ContractForSignature `json:"sign_contract"`
+	SignContract ContractForSignature `json:"sign_contract" validate:"required"`
 }
 
 // SignContractResponse Response for signing a contract
@@ -303,10 +299,10 @@ type SignContractResponse struct {
 // UpsertServicesRequest defines model for UpsertServicesRequest.
 type UpsertServicesRequest struct {
 	// ContractId Contract whose service list is updated
-	ContractId openapi_types.UUID `json:"contract_id"`
+	ContractId openapi_types.UUID `json:"contract_id" validate:"required"`
 
 	// Services Full list of services to add/update for the contract
-	Services []ServiceItem `json:"services"`
+	Services []ServiceItem `json:"services" validate:"required,min=1"`
 }
 
 // UpsertServicesResponse defines model for UpsertServicesResponse.
@@ -321,7 +317,7 @@ type CheckServiceAvailabilityForCompanyParamsServiceCode string
 // GetActiveContractByCompanyIdParams defines parameters for GetActiveContractByCompanyId.
 type GetActiveContractByCompanyIdParams struct {
 	// CompanyId Company ID
-	CompanyId int64 `form:"companyId" json:"companyId"`
+	CompanyId int64 `form:"companyId" json:"companyId" validate:"required,min=1"`
 }
 
 // CreateContractJSONRequestBody defines body for CreateContract for application/json ContentType.
