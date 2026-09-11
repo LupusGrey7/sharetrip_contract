@@ -1,6 +1,12 @@
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
+# Keep oapi-codegen output trackable (global gitignore may hide IDEA's gen/):
+!/gen/
+!/gen/**
+# .docs/ — только локально (конспекты/cheatsheets), в remote не пушим (см. global ignore)
+
+#
 # Binaries for programs and plugins
 *.exe
 *.exe~

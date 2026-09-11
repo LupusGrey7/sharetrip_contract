@@ -7,11 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"job4j/sharetrip-contract/gen"
 	"job4j/sharetrip-contract/internal/contract/domain"
 	"job4j/sharetrip-contract/internal/contract/usecase"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // HTTP component tests for POST /api/v2/contracts/ (handler: create_contract.go).
@@ -28,10 +30,11 @@ func TestCreateContract_HTTP(t *testing.T) {
 
 	validBody := []byte(`{
 		"company_id": 42,
+		"client_id": "11111111-1111-1111-1111-111111111111",
 		"contract_number": "C-42",
 		"status": "active",
 		"start_date": "2026-01-01T00:00:00Z",
-		"end_date": "2027-01-01T00:00:00Z"
+		"expired_at": "2027-01-01T00:00:00Z"
 	}`)
 
 	tests := []struct {
@@ -64,7 +67,7 @@ func TestCreateContract_HTTP(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			// Validator tags on CreateContractRequest (required company_id, dates, …).
+			// Validator tags on gen.CreateContractRequest (from x-oapi-codegen-extra-tags).
 			name:       "request validation failed",
 			body:       []byte(`{}`),
 			service:    stubContractService{},
@@ -95,7 +98,7 @@ func TestCreateContract_HTTP(t *testing.T) {
 				CompanyService:  &stubCompanyService{},
 			}
 
-			resp := performRequest(t, newRoutesApp(t, srv), http.MethodPost, "/api/v2/contracts/", tt.body)
+			resp := performRequest(t, newRoutesApp(t, srv), http.MethodPost, "/api/v2/contracts", tt.body)
 			defer closeResponseBody(t, resp)
 
 			if resp.StatusCode != tt.wantStatus {
@@ -104,10 +107,17 @@ func TestCreateContract_HTTP(t *testing.T) {
 			}
 
 			if tt.wantStatus == http.StatusCreated {
-				var got ContractResponse
+				var got gen.CreateContractResponse
 				decodeJSON(t, resp, &got)
-				if got.ID != contractID || got.CompanyID != 42 || got.Status != string(domain.ContractStatusActive) {
-					t.Fatalf("unexpected response: %+v", got)
+				c := got.Contract
+				if c.Id == nil || *c.Id != openapi_types.UUID(contractID) {
+					t.Fatalf("unexpected id: %+v", got)
+				}
+				if c.CompanyId == nil || *c.CompanyId != 42 {
+					t.Fatalf("unexpected company_id: %+v", got)
+				}
+				if c.Status == nil || *c.Status != gen.Active {
+					t.Fatalf("unexpected status: %+v", got)
 				}
 				return
 			}
