@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"job4j/sharetrip-contract/gen"
 	"job4j/sharetrip-contract/internal/observability/logctx"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +12,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func (s *Server) GetActiveContractByCompanyID(c *fiber.Ctx) error {
+// GetActiveContractByCompanyId receives query params already bound by the generated Fiber wrapper.
+func (s *Server) GetActiveContractByCompanyId(
+	c *fiber.Ctx,
+	params gen.GetActiveContractByCompanyIdParams,
+) error {
 	tracer := otel.Tracer("contract-api")
 	ctx, span := tracer.Start(c.UserContext(), "GetActiveContractByCompanyIDHandler")
 	traceID := span.SpanContext().TraceID().String()
@@ -19,29 +24,24 @@ func (s *Server) GetActiveContractByCompanyID(c *fiber.Ctx) error {
 
 	logger := logctx.Logger(ctx).With(
 		slog.String("server", "ContractServer"),
-		slog.String("handler", "GetActiveContractByCompanyID"),
+		slog.String("handler", "GetActiveContractByCompanyId"),
 		slog.String("trace_id", traceID),
 	)
 
-	var req GetActiveContractByCompanyIDRequest
-	if err := c.QueryParser(&req); err != nil {
-		logger.Warn("get active contract failed: invalid query", slog.Any("error", err))
-		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
-	}
 	if s.Validator != nil {
-		if err := s.Validator.Struct(&req); err != nil {
+		if err := s.Validator.Struct(&params); err != nil {
 			logger.Warn("get active contract failed: invalid request", slog.Any("error", err))
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	}
 
-	span.SetAttributes(attribute.Int("company_id", req.CompanyID))
+	span.SetAttributes(attribute.Int64("company_id", params.CompanyId))
 	ctx = logctx.WithLogger(ctx, logger)
-	logger.Debug("GetActiveContractByCompanyID started")
+	logger.Debug("GetActiveContractByCompanyId started")
 
 	resp, err := s.ContractService.GetActiveContractByCompanyID(
 		ctx,
-		toGetActiveContractByCompanyIDInput(&req),
+		toGetActiveContractByCompanyIDInput(&params),
 	)
 	if err != nil {
 		logger.Error("get active contract failed", slog.Any("error", err))
@@ -49,6 +49,6 @@ func (s *Server) GetActiveContractByCompanyID(c *fiber.Ctx) error {
 	}
 
 	out := toContractResponse(resp)
-	logger.Debug("get active contract completed", slog.String("company_id", strconv.Itoa(req.CompanyID)))
+	logger.Debug("get active contract completed", slog.String("company_id", strconv.FormatInt(params.CompanyId, 10)))
 	return c.Status(fiber.StatusOK).JSON(out)
 }
