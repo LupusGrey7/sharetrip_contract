@@ -16,6 +16,15 @@ func TestPatchOpenAPIServer_OAS3LocalURL(t *testing.T) {
 	}
 }
 
+func TestPatchOpenAPIServer_BundledOAS3URL(t *testing.T) {
+	in := []byte("servers:\n  - description: Local\n    url: http://localhost:8082/api/v2\n")
+	got := string(patchOpenAPIServer(in, "localhost:8099"))
+	want := "servers:\n  - description: Local\n    url: http://localhost:8099/api/v2\n"
+	if got != want {
+		t.Fatalf("got=%q want=%q", got, want)
+	}
+}
+
 func TestGetOpenAPISpec_HTTP_200(t *testing.T) {
 	root := findRepoRoot(t)
 	changeWorkingDirectory(t, root)

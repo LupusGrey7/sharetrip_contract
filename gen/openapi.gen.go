@@ -343,7 +343,7 @@ type ServerInterface interface {
 	// GetActiveContractByCompanyId Get active contract by company ID
 	// (GET /contracts/active)
 	GetActiveContractByCompanyId(c *fiber.Ctx, params GetActiveContractByCompanyIdParams) error
-	// GetOpenAPISpec Get OpenAPI specification (contract.yaml)
+	// GetOpenAPISpec Get bundled OpenAPI specification
 	// (GET /contracts/openapi)
 	GetOpenAPISpec(c *fiber.Ctx) error
 	// GetContractByID Get contract by ID
