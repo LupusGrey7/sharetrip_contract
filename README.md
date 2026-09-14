@@ -155,7 +155,8 @@ GET  /api/v2/companies/{companyId}/services/{serviceCode}/availability
 
 Для `trip_creation → allowed: true` без `PUT /services` используй `make seed` (или SQL в `scripts/seeds`).
 
-`PUT /services`, `GET /contracts/{contractId}` и `PATCH` статуса убраны из кода (остались в `api/contract.yaml`).
+`PUT /services`, `GET /contracts/{contractId}` и `PATCH` статуса не имеют бизнес-реализации:
+они описаны в `api/paths/`, а generated routes пока ведут в заглушки `501`.
 
 ### Трейсинг в Jaeger (Contract)
 

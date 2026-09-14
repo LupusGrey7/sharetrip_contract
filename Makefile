@@ -46,12 +46,14 @@ else
 endif
 
 # ============================================================
-# OPEN API Generator (https://openapi-generator.tech/) — for generating client code from OpenAPI spec
+# oapi-codegen (https://github.com/oapi-codegen/oapi-codegen) — Go types and Fiber server boundary
 # ============================================================
 OAPI_CODEGEN_VERSION := v2.8.0
 GOEXE := $(shell go env GOEXE)
 OAPI_CODEGEN_BIN := bin/oapi-codegen$(GOEXE)
 OAPI_CODEGEN := ./$(OAPI_CODEGEN_BIN)
+OPENAPI_ROOT := api/contract.yaml
+OPENAPI_BUNDLE = $(BUILD_DIR)/openapi.bundle.yaml
 export GOBIN := $(CURDIR)/bin
 # ============================================================
 # Important Variables
@@ -346,4 +348,5 @@ $(OAPI_CODEGEN_BIN):
 generate: generate-api
 
 generate-api: $(OAPI_CODEGEN_BIN)
-	$(OAPI_CODEGEN) --config api/openapi.codegen.yaml api/contract.yaml
+	$(GO) run ./cmd/openapi-bundle $(OPENAPI_ROOT) $(OPENAPI_BUNDLE)
+	$(OAPI_CODEGEN) --config api/openapi.codegen.yaml $(OPENAPI_BUNDLE)
