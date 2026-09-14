@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: Create Contract operation
+  version: 0.1.0
+paths:
+  /contracts:
+    post:
+      tags:
+        - contracts
+      summary: Create contract for company
+      description: |
+        Creates a new contract for a company.
+
+        REST resource collection: POST /contracts (not /create_contract).
+      operationId: createContract
+      requestBody:
+        required: true
+        description: Contract create payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractRequest"
+      responses:
+        "201":
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateContractResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "404":
+          description: Company not found
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+
+components:
+  schemas:
+    CreateContractRequest:
+      type: object
+      required:
+        - company_id
+        - client_id
+        - start_date
+        - expired_at
+      properties:
+        contract_number:
+          type: string
+          minLength: 1
+          description: Business contract number
+          # go-playground/validator tags → gen struct (oapi-codegen)
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
+        company_id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Company ID
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+        client_id:
+          type: string
+          format: uuid
+          description: Client ID
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        status:
+          allOf:
+            - $ref: "../components/common.yaml#/components/schemas/ContractStatus"
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,oneof=draft active suspended terminated"
+        start_date:
+          type: string
+          format: date-time
+          description: Contract start date
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        expired_at:
+          type: string
+          format: date-time
+          description: Contract expiration date
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+      additionalProperties: false
+
+    CreateContractResponse:
+      type: object
+      description: Full contract representation
+      required:
+        - contract
+      properties:
+        contract:
+          $ref: "../components/common.yaml#/components/schemas/ContractResponse"
+      additionalProperties: false
+

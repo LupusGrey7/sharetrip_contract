@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: Get Openapi Spec operation
+  version: 0.1.0
+paths:
+  /contracts/openapi:
+    get:
+      tags:
+        - docs
+      summary: Get bundled OpenAPI specification
+      description: |
+        Returns build/openapi.bundle.yaml produced by make generate.
+        The bundle contains all operation files and common schemas, so Swagger UI
+        does not need separate HTTP routes for repository-local $ref files.
+
+        This does NOT open Swagger Editor in the browser by itself — it serves the YAML file.
+        To view it in Swagger Editor: save this response and import it, or import
+        build/openapi.bundle.yaml after make generate.
+
+        See also: .docs/cheatsheets/openapi/swagger-ui-cheatsheet.md
+      operationId: getOpenAPISpec
+      responses:
+        "200":
+          description: OpenAPI 3.0 document (YAML)
+          content:
+            application/yaml:
+              schema:
+                type: string
+                format: binary
+            text/yaml:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Spec file not found on disk (wrong working directory)
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+

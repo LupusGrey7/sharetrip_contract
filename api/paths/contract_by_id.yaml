@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: Contract By Id operation
+  version: 0.1.0
+paths:
+  /contracts/{contractId}:
+    get:
+      tags:
+        - contracts
+      summary: Get contract by ID
+      description: Returns contract by internal contract ID.
+      operationId: getContractByID
+      parameters:
+        - name: contractId
+          in: path
+          description: Contract ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/ContractResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "404":
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+    patch:
+      tags:
+        - contracts
+      summary: Change contract status
+      description: |
+        Updates only the status of an existing contract.
+
+        Closest existing operation to a dedicated "sign" step: status transition
+        (e.g. draft → active). A separate POST /sign_contract can be added later
+        if product needs an explicit sign use-case.
+      operationId: updateContractStatusById
+      parameters:
+        - name: contractId
+          in: path
+          description: Contract ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: New contract status
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContractStatusRequest"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractUpdateStatusResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "404":
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+
+components:
+  schemas:
+    ContractStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          allOf:
+            - $ref: "../components/common.yaml#/components/schemas/ContractStatus"
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+
+    ContractUpdateStatusResponse:
+      type: object
+      required:
+        - contract_status_update
+      properties:
+        contract_status_update:
+          $ref: "#/components/schemas/ContractStatusUpdateResponse"
+
+    ContractStatusUpdateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contract_number:
+          type: string
+        status:
+          $ref: "../components/common.yaml#/components/schemas/ContractStatus"
+

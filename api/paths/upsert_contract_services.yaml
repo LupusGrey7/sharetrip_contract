@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: Upsert Contract Services operation
+  version: 0.1.0
+paths:
+  /services:
+    put:
+      tags:
+        - services
+      summary: Add or update list of services for a contract
+      description: |
+        Replaces/updates the list of available services for a contract.
+        Request must contain contract context and an array of services with enable flags.
+      operationId: upsertContractServices
+      requestBody:
+        required: true
+        description: Contract ID and list of services to enable/disable
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertServicesRequest"
+      responses:
+        "200":
+          description: Services list updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpsertServicesResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "404":
+          description: Contract or service not found
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+
+components:
+  schemas:
+    UpsertServicesRequest:
+      type: object
+      required:
+        - contract_id
+        - services
+      properties:
+        contract_id:
+          type: string
+          format: uuid
+          description: Contract whose service list is updated
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        services:
+          type: array
+          description: Full list of services to add/update for the contract
+          items:
+            $ref: "#/components/schemas/ServiceItem"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    ServiceItem:
+      type: object
+      required:
+        - service_code
+        - is_enabled
+      properties:
+        service_code:
+          type: string
+          enum:
+            - trip_start
+            - trip_creation
+            - trip_participants
+            - notifications
+            - premium_support
+          description: Business service code
+          example: trip_creation
+          x-oapi-codegen-extra-tags:
+            validate: "required,oneof=trip_start trip_creation trip_participants notifications premium_support"
+        is_enabled:
+          type: boolean
+          default: false
+          description: Whether this service is enabled for the contract
+          example: false
+
+    UpsertServicesResponse:
+      type: object
+      properties:
+        contract_id:
+          type: string
+          format: uuid
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceItem"
+

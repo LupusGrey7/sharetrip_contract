@@ -1,0 +1,55 @@
+openapi: 3.0.3
+info:
+  title: Get Active Contract By Company Id operation
+  version: 0.1.0
+paths:
+  /contracts/active:
+    get:
+      tags:
+        - contracts
+      summary: Get active contract by company ID
+      description: Returns the active contract for a company.
+      operationId: getActiveContractByCompanyId
+      parameters:
+        - name: companyId
+          in: query
+          description: Company ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/ContractResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "404":
+          description: Active contract not found
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+
