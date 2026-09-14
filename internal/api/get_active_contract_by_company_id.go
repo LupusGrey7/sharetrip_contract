@@ -12,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-// GetActiveContractByCompanyId receives query params already bound by the generated Fiber wrapper.
 func (s *Server) GetActiveContractByCompanyId(
 	c *fiber.Ctx,
 	params gen.GetActiveContractByCompanyIdParams,

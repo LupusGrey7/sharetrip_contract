@@ -20,7 +20,6 @@ func (s *Server) CreateContract(c *fiber.Ctx) error {
 		slog.String("handler", "CreateContract"),
 	)
 
-	// Wire type from gen (oapi-codegen). Logic same as before: parse → Validator → service.
 	var req gen.CreateContractRequest
 	if err := c.BodyParser(&req); err != nil {
 		logger.Warn("CreateContract parse failed", slog.Any("error", err))
@@ -44,6 +43,6 @@ func (s *Server) CreateContract(c *fiber.Ctx) error {
 	}
 
 	out := toCreateContractResponse(resp)
-	logger.Debug("CreateContract completed completed", slog.String("contract_id", out.Contract.Id.String()))
+	logger.Debug("CreateContract completed", slog.String("contract_id", out.Contract.Id.String()))
 	return c.Status(fiber.StatusCreated).JSON(out)
 }
