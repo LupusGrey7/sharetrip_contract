@@ -58,9 +58,19 @@ project_info/
 scripts/
 api/postman_collections/
 
+# Deploy stack (compose/observability) — local by default.
+# Track deploy/k8s manifests except real secrets and local README.
+deploy/*
+!deploy/k8s/
+!deploy/k8s/**
+deploy/k8s/README.md
+deploy/k8s/secret.yaml
+deploy/k8s/*-secret.yaml
+!deploy/k8s/*-secret.example.yaml
+
 #logs
 deploy/logs/
-deploy/logs/
+
 
 #sqruff for lint sql script
 .sqruff
