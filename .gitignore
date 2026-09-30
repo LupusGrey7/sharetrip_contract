@@ -51,8 +51,6 @@ go.work.sum
 # Local development files
 docs/
 develop/
-deploy/
-deploy/docker-compose.yml
 tmp/
 project_info/
 scripts/

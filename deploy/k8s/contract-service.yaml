@@ -1,0 +1,17 @@
+# Service: stable in-cluster DNS for Contract pods — ShareTrip calls http://contract-service:8080 (not docker -p).
+apiVersion: v1
+kind: Service
+metadata:
+  name: contract-service
+  namespace: sharetrip
+  labels:
+    app: contract
+spec:
+  type: ClusterIP
+  selector:
+    app: contract
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

@@ -87,6 +87,7 @@ help:
 	@echo "  build        	 						- build a binary file"
 	@echo "  run         	 	 					- run the application locally"
 	@echo "  e2e         	  	 					- end to end check an application locally"
+	@echo "  docker-build  	 					- build image sharetrip/contract:local for deploy/k8s"
 	@echo "  up          	 	 					- raise app infrastructure docker image"
 	@echo "  start         	 					- start app infrastructure docker image"
 	@echo "  stop        	  	 					- stop app infrastructure docker image"
@@ -171,6 +172,13 @@ build:
 .PHONY: run
 run:
 	$(GO) run $(MAIN_FILE)
+
+# Task - Build container image for deploy/k8s (tag must match contract-deployment.yaml)
+IMAGE ?= sharetrip/contract:local
+
+.PHONY: docker-build
+docker-build:
+	docker build -t $(IMAGE) .
 
 # Task - Local application check (including adding a check for the response body:)
 .PHONY: e2e
