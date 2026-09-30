@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"job4j/sharetrip-contract/config"
 	"job4j/sharetrip-contract/internal/api"
 	"job4j/sharetrip-contract/internal/app"
-	"job4j/sharetrip-contract/internal/config"
 	"job4j/sharetrip-contract/internal/storage"
 	"log/slog"
 	"os"
@@ -24,14 +24,21 @@ func main() {
 func run() error {
 	ctx := context.Background()
 
-	appEnv := config.CurrentAppEnv()
-	envFile := config.EnvFileForAppEnv(appEnv)
-	cfg, err := config.LoadWithEnvFile(envFile)
+	envFile := config.EnvFileForAppEnv(config.CurrentAppEnv())
+	loaded, err := config.LoadEnvFile(envFile)
+	if err != nil {
+		return err
+	}
+	if !loaded {
+		slog.Info("env file not found, using process environment only", slog.String("file", envFile))
+	}
+
+	cfg, err := config.LoadAppConfig()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	pool, err := storage.NewPool(ctx, cfg.Database.DSN())
+	pool, err := storage.NewPool(ctx, cfg.DatabaseDSN)
 	if err != nil {
 		return fmt.Errorf("connect to database: %w", err)
 	}
@@ -40,7 +47,7 @@ func run() error {
 	slog.Info("connected to database")
 
 	// init Tracing (OpenTelemetry → otel-collector → Jaeger)
-	tp, err := app.InitTracing(ctx)
+	tp, err := app.InitTracing(ctx, cfg.Tracing)
 	if err != nil {
 		slog.Error("init tracing failed", "error", err)
 		os.Exit(1)
