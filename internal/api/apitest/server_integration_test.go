@@ -31,7 +31,7 @@ import (
 )
 
 // TestAPIWithPostgres verifies the real HTTP -> service -> usecase -> storage -> PostgreSQL chain.
-// It does not read DATABASE_URL or .env.test: the DSN comes directly from Testcontainers.
+// It does not read DATABASE_DSN or .env.test: the DSN comes directly from Testcontainers.
 func TestAPIWithPostgres(t *testing.T) {
 	testcontainers.SkipIfProviderIsNotHealthy(t)
 
