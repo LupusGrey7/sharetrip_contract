@@ -1,0 +1,67 @@
+openapi: 3.0.3
+info:
+  title: Shared Contract API components
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    Error:
+      type: object
+      description: Common error body for all failed responses
+      properties:
+        code:
+          type: string
+          description: Error code
+          enum:
+            - COMPANY_VALIDATE_ERROR
+            - COMPANY_NOT_FOUND
+            - CONTRACT_NOT_FOUND
+            - SERVICE_NOT_FOUND
+            - SERVICE_DISABLED
+            - INTERNAL_SERVER_ERROR
+            - SERVICE_UNAVAILABLE
+        message:
+          type: string
+          description: Human-readable error message
+
+    ContractStatus:
+      type: string
+      description: Contract status
+      enum:
+        - draft
+        - active
+        - suspended
+        - terminated
+
+    ContractResponse:
+      type: object
+      description: Full contract representation
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal contract ID
+        contract_number:
+          type: string
+        company_id:
+          type: integer
+          format: int64
+        status:
+          $ref: "#/components/schemas/ContractStatus"
+        start_date:
+          type: string
+          format: date-time
+          nullable: true
+        expired_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+

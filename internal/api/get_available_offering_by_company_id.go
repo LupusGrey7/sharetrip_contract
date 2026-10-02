@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"job4j/sharetrip-contract/gen"
 	"job4j/sharetrip-contract/internal/observability/logctx"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +12,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func (s *Server) GetAvailableOfferingByCompanyID(c *fiber.Ctx) error {
+// CheckServiceAvailabilityForCompany receives path params already bound by the generated Fiber wrapper.
+func (s *Server) CheckServiceAvailabilityForCompany(
+	c *fiber.Ctx,
+	companyId int64,
+	serviceCode gen.CheckServiceAvailabilityForCompanyParamsServiceCode,
+) error {
 	tracer := otel.Tracer("contract-api")
 	ctx, span := tracer.Start(c.UserContext(), "GetAvailableOfferingByCompanyIDHandler")
 	traceID := span.SpanContext().TraceID().String()
@@ -19,18 +25,18 @@ func (s *Server) GetAvailableOfferingByCompanyID(c *fiber.Ctx) error {
 
 	logger := logctx.Logger(ctx).With(
 		slog.String("server", "ContractServer"),
-		slog.String("handler", "GetAvailableOfferingByCompanyID"),
+		slog.String("handler", "CheckServiceAvailabilityForCompany"),
 		slog.String("trace_id", traceID),
-		slog.String("company_id", c.Params("companyId")),
-		slog.String("service_code", c.Params("serviceCode")),
+		slog.Int64("company_id", companyId),
+		slog.String("service_code", string(serviceCode)),
 	)
 
-	var req GetAvailableOfferingByCompanyIDRequest
-	if err := c.ParamsParser(&req); err != nil {
-		logger.Warn("invalid path params", slog.Any("error", err))
-		return fiber.NewError(fiber.StatusBadRequest, ErrInvalidIDParamFormat.Error())
+	// Wrapper has already converted path strings to typed values.
+	// This request object keeps the existing min/oneof Validator rules.
+	req := GetAvailableOfferingByCompanyIDRequest{
+		CompanyID:   int(companyId),
+		ServiceCode: string(serviceCode),
 	}
-
 	if s.Validator != nil {
 		if err := s.Validator.Struct(&req); err != nil {
 			logger.Warn("invalid request", slog.Any("error", err))
@@ -40,7 +46,7 @@ func (s *Server) GetAvailableOfferingByCompanyID(c *fiber.Ctx) error {
 
 	span.SetAttributes(
 		attribute.Int("company_id", req.CompanyID),
-		attribute.String("service_code", string(req.ServiceCode)),
+		attribute.String("service_code", req.ServiceCode),
 	)
 	ctx = logctx.WithLogger(ctx, logger)
 	logger.Debug("GetAvailableOfferingByCompanyID started")

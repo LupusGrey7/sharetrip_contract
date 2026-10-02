@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"os"
 
+	"job4j/sharetrip-contract/gen"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -12,9 +14,6 @@ const (
 	HealthcheckPath = "/healthcheck"
 	ContractPath    = "/contracts"
 	CompaniesPath   = "/companies"
-	contractOpenAPIPath            = "/openapi"
-	contractGetActivePath          = "/active"
-	companyServiceAvailabilityPath = "/:companyId/services/:serviceCode/availability"
 )
 
 // RouteInfo — method + path for logging at startup.
@@ -28,10 +27,14 @@ type RouteInfo struct {
 func RegisteredRoutes() []RouteInfo {
 	return []RouteInfo{
 		{Method: "GET", Path: HealthcheckPath, Note: "liveness / DB ping"},
-		{Method: "GET", Path: GroupPrefixV2 + ContractPath + contractOpenAPIPath, Note: "OpenAPI yaml (Swagger UI :8086)"},
-		{Method: "POST", Path: GroupPrefixV2 + ContractPath + "/", Note: "create contract"},
+		{Method: "GET", Path: GroupPrefixV2 + ContractPath + "/openapi", Note: "OpenAPI yaml (Swagger UI :8086)"},
+		{Method: "POST", Path: GroupPrefixV2 + ContractPath, Note: "create contract"},
 		{Method: "GET", Path: GroupPrefixV2 + ContractPath + "/active", Note: "get active contract by companyId query"},
 		{Method: "GET", Path: GroupPrefixV2 + CompaniesPath + "/{companyId}/services/{serviceCode}/availability", Note: "check service availability for company"},
+		{Method: "GET", Path: GroupPrefixV2 + ContractPath + "/{contractId}", Note: "get by id (stub 501)"},
+		{Method: "PATCH", Path: GroupPrefixV2 + ContractPath + "/{contractId}", Note: "update status (stub 501)"},
+		{Method: "POST", Path: GroupPrefixV2 + ContractPath + "/{contractId}/signature", Note: "sign (stub 501)"},
+		{Method: "PUT", Path: GroupPrefixV2 + "/services", Note: "upsert services (stub 501)"},
 	}
 }
 
@@ -48,17 +51,12 @@ func LogRegisteredRoutes(addr string) {
 	}
 }
 
-// SetupRoutes — setup routes for the server.
+// SetupRoutes — healthcheck вручную; business paths из gen.RegisterHandlers.
+// *Server реализует рабочие handlers с generated query/path params.
+// oapiServer добавляет только временные stubs.
 func (s *Server) SetupRoutes(app *fiber.App) {
 	app.Get(HealthcheckPath, s.Healthcheck)
-
-	v2 := app.Group(GroupPrefixV2)
-
-	contracts := v2.Group(ContractPath)
-	contracts.Get(contractOpenAPIPath, s.GetOpenAPISpec)
-	contracts.Post("/", s.CreateContract)
-	contracts.Get(contractGetActivePath, s.GetActiveContractByCompanyID)
-
-	companies := v2.Group(CompaniesPath)
-	companies.Get(companyServiceAvailabilityPath, s.GetAvailableOfferingByCompanyID)
+	gen.RegisterHandlersWithOptions(app, oapiServer{Server: s}, gen.FiberServerOptions{
+		BaseURL: GroupPrefixV2,
+	})
 }

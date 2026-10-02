@@ -141,7 +141,7 @@ make run
 | **Grafana (ShareTrip compose)** | http://localhost:3000 |
 | **Kafka UI (ShareTrip compose)** | http://localhost:9000 |
 
-Подробно про единый Jaeger: [`.docs/cheatsheets/shared-jaeger-otel-cheatsheet.md`](.docs/cheatsheets/shared-jaeger-otel-cheatsheet.md).
+Подробно про единый Jaeger: [`.docs/cheatsheets/observability/shared-jaeger-otel-cheatsheet.md`](.docs/cheatsheets/observability/shared-jaeger-otel-cheatsheet.md).
 
 ### HTTP API Contract Service
 
@@ -155,7 +155,8 @@ GET  /api/v2/companies/{companyId}/services/{serviceCode}/availability
 
 Для `trip_creation → allowed: true` без `PUT /services` используй `make seed` (или SQL в `scripts/seeds`).
 
-`PUT /services`, `GET /contracts/{contractId}` и `PATCH` статуса убраны из кода (остались в `api/contract.yaml`).
+`PUT /services`, `GET /contracts/{contractId}` и `PATCH` статуса не имеют бизнес-реализации:
+они описаны в `api/paths/`, а generated routes пока ведут в заглушки `501`.
 
 ### Трейсинг в Jaeger (Contract)
 
@@ -168,6 +169,47 @@ GET  /api/v2/companies/{companyId}/services/{serviceCode}/availability
 | `GET /healthcheck` | ❌ |
 
 В Jaeger выбери сервис **`sharetrip-contract`** (не путать с `share-trip`).
+
+### Переменные окружения (ENV)
+
+Приложение читает ENV процесса. Локально их подкладывает `.env.<APP_ENV>` (шаблон — `.env.example`),
+в Kubernetes — `envFrom` из ConfigMap и Secret. Без `DATABASE_DSN` сервис **не стартует** (fail-fast).
+
+| Ключ | Обязателен | Default | Кто читает | Где в k8s |
+|------|------------|---------|------------|-----------|
+| `DATABASE_DSN` | **да** | — | `config.LoadAppConfig` → `storage.NewPool` | Secret `contract-secret` |
+| `HTTP_PORT` | нет | `8082` | `config.LoadAppConfig` | ConfigMap `contract-config` |
+| `ENV` | нет | `development` | `config.LoadAppConfig` | ConfigMap |
+| `APP_ENV` | нет | `dev` | `config.EnvFileForAppEnv` → файл `.env.<APP_ENV>` | ConfigMap |
+| `OTEL_SERVICE_NAME` / `OTEL_SERVICE_VERSION` / `OTEL_ENVIRONMENT` | нет | `sharetrip-contract` / `1.0.0` / `local` | `config.LoadAppConfig` → `app.InitTracing` | ConfigMap |
+| `OTEL_EXPORTER_ENDPOINT` | нет | `localhost:4319` | `config.LoadAppConfig` → `app.InitTracing` | ConfigMap |
+| `DB_DRIVER`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSLMODE` | для миграций | — | только Makefile / goose | не нужны |
+
+Host в `DATABASE_DSN` зависит от того, **откуда** идёт подключение:
+
+| Откуда | host:port |
+|--------|-----------|
+| `make run` на ноутбуке | `localhost:6547` |
+| Pod в OrbStack / Docker Desktop k8s → Postgres из `deploy/docker` | `host.docker.internal:6547` |
+| Pod → Postgres внутри кластера | `<postgres-service>:5432` |
+
+### Kubernetes (локально)
+
+Манифесты — `deploy/k8s/`. Namespace `sharetrip` общий и создаётся манифестом ShareTrip,
+здесь его не дублируем.
+
+```bash
+make docker-build                                   # образ sharetrip/contract:local
+cp deploy/k8s/contract-secret.example.yaml deploy/k8s/contract-secret.yaml   # заполнить, не коммитить
+kubectl apply -f deploy/k8s/contract-config.yaml
+kubectl apply -f deploy/k8s/contract-secret.yaml
+kubectl apply -f deploy/k8s/contract-deployment.yaml
+kubectl apply -f deploy/k8s/contract-service.yaml
+kubectl -n sharetrip port-forward svc/contract-service 8082:8080
+```
+
+Внутри кластера ShareTrip ходит в Contract по `http://contract-service:8080`
+(Service `8080` → `targetPort: http` → контейнер `8082`).
 
 ---
 
@@ -269,7 +311,7 @@ Integration-тест сам запускает PostgreSQL через Testcontain
 
 - API-контракт: `api/contract.yaml`
 - Карта веток: `.docs/git-branches.md`
-- Observability: `.docs/cheatsheets/shared-jaeger-otel-cheatsheet.md`
+- Observability: `.docs/cheatsheets/observability/shared-jaeger-otel-cheatsheet.md`
 - Postman (ручные сценарии): `.docs/cheatsheets/postman-collections-cheatsheet.md`
 
 ## Projects Ports 

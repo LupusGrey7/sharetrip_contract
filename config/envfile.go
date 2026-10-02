@@ -1,7 +1,12 @@
 package config
 
 import (
+	"errors"
+	"fmt"
+	"io/fs"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -37,4 +42,17 @@ func CurrentAppEnv() string {
 		return DefaultAppEnv
 	}
 	return v
+}
+
+// LoadEnvFile copies keys from an optional dotenv file into the process environment.
+// Load (not Overload): variables already set in the process (K8s envFrom, shell, CI) win over the file.
+// A missing file is not an error: in Docker/Kubernetes there is no .env file at all.
+func LoadEnvFile(path string) (bool, error) {
+	if err := godotenv.Load(path); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return false, nil
+		}
+		return false, fmt.Errorf("load env file %q: %w", path, err)
+	}
+	return true, nil
 }

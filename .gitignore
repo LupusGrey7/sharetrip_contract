@@ -1,6 +1,12 @@
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
+# Keep oapi-codegen output trackable (global gitignore may hide IDEA's gen/):
+!/gen/
+!/gen/**
+# .docs/ — только локально (конспекты/cheatsheets), в remote не пушим (см. global ignore)
+
+#
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -45,16 +51,24 @@ go.work.sum
 # Local development files
 docs/
 develop/
-deploy/
-deploy/docker-compose.yml
 tmp/
 project_info/
 scripts/
 api/postman_collections/
 
+# Deploy stack (compose/observability) — local by default.
+# Track deploy/k8s manifests except real secrets and local README.
+deploy/*
+!deploy/k8s/
+!deploy/k8s/**
+deploy/k8s/README.md
+deploy/k8s/secret.yaml
+deploy/k8s/*-secret.yaml
+!deploy/k8s/*-secret.example.yaml
+
 #logs
 deploy/logs/
-deploy/logs/
+
 
 #sqruff for lint sql script
 .sqruff

@@ -46,6 +46,16 @@ else
 endif
 
 # ============================================================
+# oapi-codegen (https://github.com/oapi-codegen/oapi-codegen) — Go types and Fiber server boundary
+# ============================================================
+OAPI_CODEGEN_VERSION := v2.8.0
+GOEXE := $(shell go env GOEXE)
+OAPI_CODEGEN_BIN := bin/oapi-codegen$(GOEXE)
+OAPI_CODEGEN := ./$(OAPI_CODEGEN_BIN)
+OPENAPI_ROOT := api/contract.yaml
+OPENAPI_BUNDLE = $(BUILD_DIR)/openapi.bundle.yaml
+export GOBIN := $(CURDIR)/bin
+# ============================================================
 # Important Variables
 # ============================================================
 GO := go
@@ -74,11 +84,12 @@ help:
 	@echo "  lint        	  	 					- run the linter"
 	@echo "  test        	  		 				- run all tests"
 	@echo "  test-integration							- run API integration tests with Testcontainers"
-	@echo "  build         	 					- build a binary file"
+	@echo "  build        	 						- build a binary file"
 	@echo "  run         	 	 					- run the application locally"
 	@echo "  e2e         	  	 					- end to end check an application locally"
+	@echo "  docker-build  	 					- build image sharetrip/contract:local for deploy/k8s"
 	@echo "  up          	 	 					- raise app infrastructure docker image"
-	@echo "  start         	 					    - start app infrastructure docker image"
+	@echo "  start         	 					- start app infrastructure docker image"
 	@echo "  stop        	  	 					- stop app infrastructure docker image"
 	@echo "  restart        	 					- restart app infrastructure docker image"
 	@echo "  clean-image    	 					- clean all app infrastructure docker image"
@@ -95,6 +106,8 @@ help:
 	@echo "  vulncheck       	 					- run vulnerability detection tool"
 	@echo "  all         	 						- run all checks: lint, tests, coverage, vulnerability detection"
 	@echo "  yaml-check     	 					- run yaml check tool"
+	@echo "  tools								- setup oapi-codegen in the local bin"
+	@echo "  generate    	 						- generate code from OpenAPI spec"
 	@echo "  info                       				 	- show information about the OS and yq"
 	@echo "  help                        					- show this help"
 	@echo "  env-default                 					- reset profile to default (APP_ENV=dev → .env.dev)"
@@ -159,6 +172,13 @@ build:
 .PHONY: run
 run:
 	$(GO) run $(MAIN_FILE)
+
+# Task - Build container image for deploy/k8s (tag must match contract-deployment.yaml)
+IMAGE ?= sharetrip/contract:local
+
+.PHONY: docker-build
+docker-build:
+	docker build -t $(IMAGE) .
 
 # Task - Local application check (including adding a check for the response body:)
 .PHONY: e2e
@@ -324,3 +344,17 @@ else
 endif
 
 # DETECTED_OS: Windows | Linux | Darwin — для yaml-check и info
+
+# ============================================================
+# Task - tools generate generate-api
+# ============================================================
+.PHONY: tools generate generate-api run
+tools: $(OAPI_CODEGEN_BIN)
+$(OAPI_CODEGEN_BIN):
+	go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
+
+generate: generate-api
+
+generate-api: $(OAPI_CODEGEN_BIN)
+	$(GO) run ./cmd/openapi-bundle $(OPENAPI_ROOT) $(OPENAPI_BUNDLE)
+	$(OAPI_CODEGEN) --config api/openapi.codegen.yaml $(OPENAPI_BUNDLE)

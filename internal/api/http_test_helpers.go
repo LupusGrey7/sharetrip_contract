@@ -13,10 +13,11 @@ import (
 )
 
 type stubContractService struct {
-	createResp *domain.ContractOutput
-	createErr  error
-	activeResp *domain.ContractOutput
-	activeErr  error
+	createResp  *domain.ContractOutput
+	createErr   error
+	activeResp  *domain.ContractOutput
+	activeErr   error
+	activeInput **domain.GetActiveContractByCompanyIDInput
 }
 
 func (s stubContractService) CreateContract(ctx context.Context, input *domain.CreateContractInput) (*domain.ContractOutput, error) {
@@ -27,6 +28,9 @@ func (s stubContractService) GetActiveContractByCompanyID(
 	ctx context.Context,
 	input *domain.GetActiveContractByCompanyIDInput,
 ) (*domain.ContractOutput, error) {
+	if s.activeInput != nil {
+		*s.activeInput = input
+	}
 	return s.activeResp, s.activeErr
 }
 

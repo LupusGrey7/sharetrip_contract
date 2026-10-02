@@ -14,9 +14,9 @@ import (
 	"github.com/google/uuid"
 )
 
-// HTTP component tests for GET /api/v2/contracts/active?companyId=
-// (OpenAPI getActiveContractByCompanyId, contract.yaml ~177).
-// Handler: get_active_contract_by_company_id.go.
+// HTTP component tests for GET /api/v2/contracts/active?companyId=.
+// RegisterHandlers' generated wrapper binds the query into gen params before
+// calling the handler; the handler validates and maps those params to domain input.
 //
 // Review asked for get_active_contract_by_id_test.go. That name mixed two YAML
 // operations. This file is get-active-by-company (yaml ~177).
@@ -42,12 +42,14 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 		service    stubContractService
 		wantStatus int
 		wantCode   string
+		wantInput  int
 	}{
 		{
 			name:       "success returns active contract for company",
 			path:       "/api/v2/contracts/active?companyId=42",
 			service:    stubContractService{activeResp: active},
 			wantStatus: http.StatusOK,
+			wantInput:  42,
 		},
 		{
 			name:       "missing companyId query",
@@ -73,6 +75,7 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 			service:    stubContractService{activeErr: usecase.ErrContractNotFound},
 			wantStatus: http.StatusNotFound,
 			wantCode:   "CONTRACT_NOT_FOUND",
+			wantInput:  99,
 		},
 		{
 			name:       "unexpected service error",
@@ -80,14 +83,18 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 			service:    stubContractService{activeErr: errors.New("database unavailable")},
 			wantStatus: http.StatusInternalServerError,
 			wantCode:   "INTERNAL_SERVER_ERROR",
+			wantInput:  42,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var gotInput *domain.GetActiveContractByCompanyIDInput
+			service := tt.service
+			service.activeInput = &gotInput
 			srv := &Server{
 				Validator:       validator.New(validator.WithRequiredStructEnabled()),
-				ContractService: tt.service,
+				ContractService: service,
 				CompanyService:  &stubCompanyService{},
 			}
 
@@ -97,6 +104,13 @@ func TestGetActiveContractByCompanyID_HTTP(t *testing.T) {
 			if resp.StatusCode != tt.wantStatus {
 				body, _ := io.ReadAll(resp.Body)
 				t.Fatalf("status=%d, want=%d body=%s", resp.StatusCode, tt.wantStatus, body)
+			}
+			if tt.wantInput == 0 {
+				if gotInput != nil {
+					t.Fatalf("service called unexpectedly with input: %+v", gotInput)
+				}
+			} else if gotInput == nil || gotInput.CompanyID != tt.wantInput {
+				t.Fatalf("service input=%+v, want company_id=%d", gotInput, tt.wantInput)
 			}
 
 			if tt.wantStatus == http.StatusOK {

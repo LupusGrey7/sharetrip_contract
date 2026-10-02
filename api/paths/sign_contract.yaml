@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Sign Contract operation
+  version: 0.1.0
+paths:
+  /contracts/{contractId}/signature:
+    post:
+      tags:
+        - contracts_signature
+      summary: Sign contract
+      description: Signs an existing contract.
+      operationId: signContract
+      parameters:
+        - name: contractId
+          in: path
+          description: Contract ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: Contract sign payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignContractRequest"
+      responses:
+        "200":
+          description: Contract signed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignContractResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "404":
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "../components/common.yaml#/components/schemas/Error"
+
+components:
+  schemas:
+    SignContractRequest:
+      type: object
+      description: Request for signing a contract
+      required:
+        - sign_contract
+      properties:
+        sign_contract:
+          allOf:
+            - $ref: "#/components/schemas/ContractForSignature"
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+
+    ContractForSignature:
+      type: object
+      description: Contract data needed for signing
+      required:
+        - id
+        - client_id
+        - company_id
+        - start_date
+        - expired_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal contract ID
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        client_id:
+          type: string
+          format: uuid
+          description: Client ID
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        contract_number:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=5"
+        company_id:
+          type: integer
+          format: int64
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=5"
+        start_date:
+          type: string
+          format: date-time
+          nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+        expired_at:
+          type: string
+          format: date-time
+          nullable: true
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+
+    SignContractResponse:
+      type: object
+      description: Response for signing a contract
+      required:
+        - contract
+      properties:
+        contract:
+          $ref: "../components/common.yaml#/components/schemas/ContractResponse"
+
